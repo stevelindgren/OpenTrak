@@ -1,0 +1,14 @@
+{
+  "name": "opentrak",
+  "version": "0.1.0",
+  "description": "Open-source CPM construction scheduler — a modern, secure replacement for SureTrak-style scheduling.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "test": "node test/engine.test.js"
+  },
+  "devDependencies": {
+    "jspdf": "2.5.2"
+  }
+}
