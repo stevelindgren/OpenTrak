@@ -15,6 +15,7 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Automatic recalculation on every edit (no F9)
 
 **Interface**
+- Dark theme by default with a light theme toggle; IBM Plex Sans embedded so it works offline
 - Activity table grouped by WBS, with inline editing (click a cell, then Enter or Tab)
 - Gantt chart with critical path, progress, float, baselines and logic lines
 - Drag from a bar's end to another bar to link them, or drag a bar's edge to change its duration
@@ -71,7 +72,7 @@ npm run build    # writes dist/opentrak.html
 - **Opened files are untrusted.** Every project file is rebuilt field by field through a sanitizer: types are checked, lengths and counts are capped, and dates are validated. Unknown fields are dropped.
 - **No unescaped HTML.** All user text is escaped before it reaches the page; nothing is evaluated.
 - **CSV export** neutralizes cells that start with `= + - @` so Excel won't run them as formulas.
-- **One pinned dependency** (jsPDF 2.5.2, MIT), bundled at build time.
+- **Pinned dependencies, bundled at build time:** jsPDF 2.5.2 (MIT) and IBM Plex Sans (SIL OFL 1.1).
 
 ## Roadmap
 
