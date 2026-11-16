@@ -30,6 +30,12 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Presets for "SureTrak classic", "Color-blind safe" (Okabe-Ito palette) and "Modern"
 - 24 available columns: choose, reorder, and drag header edges to resize
 
+**Schedule assistant** (in the Claude-hosted version)
+- Ask questions about the schedule ("why are we late?") or describe changes in plain English
+- The assistant proposes exact edits (add activities, links, durations, progress, constraints, data date); nothing changes until you click Apply, and applied changes undo as one step
+- Every proposed edit is validated like a manual edit; changes that would create a logic loop are rejected
+- Hidden in standalone copies: running it outside Claude needs an AI API key, which must live on a server, not in this file (planned with the server version)
+
 **Output**
 - Print / PDF in Letter, Legal, Tabloid (11×17), A4 or A3, landscape or portrait, with a title block, legend and multi-page output. The PDF is vector, so it stays sharp at any size.
 - CSV export for Excel, protected against spreadsheet formula injection
