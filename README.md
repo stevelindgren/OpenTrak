@@ -46,6 +46,10 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 | Ctrl+P | Print / PDF |
 | Esc | Close the panel or dialog |
 
+## Run it on the web (GitHub Pages)
+
+`docs/index.html` is the built app. To host it free on GitHub Pages: open **Settings → Pages**, set **Source** to *Deploy from a branch*, choose **main** and **/docs**, then click **Save**. It will be live at `https://stevelindgren.github.io/OpenTrak/` within a minute or two. Each person's schedules stay in their own browser; the site stores nothing.
+
 ## Development
 
 ```bash

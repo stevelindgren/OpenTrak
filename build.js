@@ -15,4 +15,8 @@ const out = app
 
 fs.mkdirSync(path.join(__dirname, 'dist'), { recursive: true });
 fs.writeFileSync(path.join(__dirname, 'dist/opentrak.html'), out);
-console.log('Built dist/opentrak.html (' + Math.round(out.length / 1024) + ' KB)');
+// docs/ is what GitHub Pages serves (Settings → Pages → main branch, /docs folder)
+fs.mkdirSync(path.join(__dirname, 'docs'), { recursive: true });
+fs.writeFileSync(path.join(__dirname, 'docs/index.html'), out);
+fs.writeFileSync(path.join(__dirname, 'docs/.nojekyll'), '');
+console.log('Built dist/opentrak.html and docs/index.html (' + Math.round(out.length / 1024) + ' KB)');
