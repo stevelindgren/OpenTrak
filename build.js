@@ -15,7 +15,15 @@ const fonts = '/* IBM Plex Sans — SIL OFL 1.1 — (c) IBM Corp. */\n' + [400, 
   "@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:" + w + ";font-display:swap;src:url(data:font/woff2;base64," +
   fs.readFileSync(path.join(__dirname, fontDir + 'ibm-plex-sans-latin-' + w + '-normal.woff2')).toString('base64') + ") format('woff2')}").join('\n');
 
+// Spell checker: nspell (MIT) bundled with esbuild, en_US Hunspell dictionary (SCOWL, MIT AND BSD), construction word list
+const esbuild = require('esbuild');
+const nspellJs = esbuild.buildSync({ entryPoints: [path.join(__dirname, 'vendor-src/nspell-entry.js')], bundle: true, write: false, format: 'iife', minify: true, platform: 'browser' }).outputFiles[0].text;
+const dicDir = 'node_modules/dictionary-en/';
+const js = (o) => JSON.stringify(o).replace(/</g, '\\u003c');
+const spellData = 'window.__SPELL=' + js({ aff: read(dicDir + 'index.aff'), dic: read(dicDir + 'index.dic'), words: read('src/words.txt').split(/\r?\n/).filter((w) => w && !w.startsWith('#')) }) + ';';
+
 const out = app
+  .replace('/*SPELL*/', () => '/* nspell 2.1.5 — MIT — (c) Titus Wormer. en_US dictionary from SCOWL / dictionary-en — MIT AND BSD */\n' + nspellJs + '\n' + spellData)
   .replace('/*FONTS*/', () => fonts)
   .replace('/*JSPDF*/', () => '/* jsPDF 2.5.2 — MIT license — (c) James Hall, yWorks GmbH */\n' + jspdf)
   .replace('/*ENGINE*/', () => engine);

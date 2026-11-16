@@ -30,6 +30,12 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Presets for "SureTrak classic", "Color-blind safe" (Okabe-Ito palette) and "Modern"
 - 24 available columns: choose, reorder, and drag header edges to resize
 
+**Spell check** (works offline)
+- Possible misspellings in activity names and resources are underlined in the table automatically; a Spelling tool lists every one with suggested fixes
+- Fix a word everywhere at once, ignore it, or add it to the project dictionary (saved in the project file and shared with anyone who opens it)
+- Construction and elevator terms (hoistway, sheave, submittal, closeout, DOB, RFI…) are built in; edit `src/words.txt` to add more
+- Text boxes also get the browser's own as-you-type spell checking
+
 **Schedule assistant** (in the Claude-hosted version)
 - Ask questions about the schedule ("why are we late?") or describe changes in plain English
 - The assistant proposes exact edits (add activities, links, durations, progress, constraints, data date); nothing changes until you click Apply, and applied changes undo as one step
@@ -61,7 +67,7 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 ## Development
 
 ```bash
-npm install      # pulls jsPDF, the only dependency
+npm install      # jsPDF, IBM Plex Sans, nspell + dictionary, esbuild (build only)
 npm test         # CPM engine unit tests
 npm run build    # writes dist/opentrak.html
 ```
@@ -79,7 +85,7 @@ npm run build    # writes dist/opentrak.html
 - **Opened files are untrusted.** Every project file is rebuilt field by field through a sanitizer: types are checked, lengths and counts are capped, and dates are validated. Unknown fields are dropped.
 - **No unescaped HTML.** All user text is escaped before it reaches the page; nothing is evaluated.
 - **CSV export** neutralizes cells that start with `= + - @` so Excel won't run them as formulas.
-- **Pinned dependencies, bundled at build time:** jsPDF 2.5.2 (MIT) and IBM Plex Sans (SIL OFL 1.1).
+- **Pinned dependencies, bundled at build time:** jsPDF 2.5.2 (MIT), IBM Plex Sans (SIL OFL 1.1), nspell 2.1.5 (MIT) and the en_US Hunspell dictionary from SCOWL (MIT and BSD).
 
 ## Roadmap
 

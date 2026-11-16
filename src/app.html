@@ -57,6 +57,12 @@ svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .rb::after{content:attr(data-tip);position:absolute;left:48px;top:50%;transform:translateY(-50%);background:var(--raised);color:var(--text);border:1px solid var(--line);padding:5px 9px;border-radius:7px;font-size:12px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;box-shadow:var(--shadow);z-index:40}
 .rb:hover::after,.rb:focus-visible::after{opacity:1}
 .rail .grow{flex:1}
+.rb[data-c="ok"] svg{color:var(--ok)}
+.rb .cnt{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad);color:#fff;font-size:10px;font-weight:600;display:grid;place-items:center;line-height:1}
+.sp{text-decoration:underline wavy var(--bad);text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-skip-ink:none}
+.sprow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line-2)}
+.spw{display:flex;flex-direction:column;min-width:150px}
+.spw small{color:var(--muted);font-size:12px}
 .col{display:flex;flex-direction:column;min-width:0;min-height:0}
 /* header */
 .hdr{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);min-height:60px;overflow-x:auto;scrollbar-width:none}
@@ -270,6 +276,7 @@ input[type=color]{background:var(--field)!important}
     <button class="rb" id="bBaseline" data-c="amber" data-tip="Baseline" aria-label="Baseline"><svg class="i" viewBox="0 0 16 16"><path d="M3.5 14V2.5M3.5 3h8l-1.7 2.6 1.7 2.6h-8"/></svg></button>
     <button class="rb" id="bBars" data-c="violet" data-tip="Format bars" aria-label="Format bars"><svg class="i" viewBox="0 0 16 16" style="stroke-width:2.2"><path d="M2.5 4h6.5M5.5 8h8M2.5 12h5"/></svg></button>
     <button class="rb" id="bCols" data-c="sky" data-tip="Columns" aria-label="Columns"><svg class="i" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="1.8"/><path d="M6.3 2.5v11M9.8 2.5v11"/></svg></button>
+    <button class="rb" id="bSpell" data-c="ok" data-tip="Spelling" aria-label="Spelling"><svg class="i" viewBox="0 0 16 16"><path d="M2 10.5l2.4-7 2.4 7M2.9 8h3M8.5 3.5h2.3a1.6 1.6 0 0 1 0 3.2H8.5zM8.5 6.7h2.7a1.7 1.7 0 0 1 0 3.4H8.5V3.5"/><path d="M9 13l1.6 1.5L14 11"/></svg><span class="cnt" id="spCnt" hidden>0</span></button>
     <button class="rb" id="bProj" data-c="slate" data-tip="Project settings & WBS" aria-label="Project settings"><svg class="i" viewBox="0 0 16 16"><path d="M2.5 4.5h6M12 4.5h1.5M2.5 11.5h2M8 11.5h5.5"/><circle cx="10" cy="4.5" r="1.7"/><circle cx="6" cy="11.5" r="1.7"/></svg></button>
     <button class="rb" id="bFile" data-tip="File: save, open, export" aria-label="File"><svg class="i" viewBox="0 0 16 16"><path d="M2 5a1.5 1.5 0 0 1 1.5-1.5h2.8l1.6 1.6h4.6A1.5 1.5 0 0 1 14 6.6v5.9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5z"/></svg></button>
     <div class="grow"></div>
@@ -278,7 +285,7 @@ input[type=color]{background:var(--field)!important}
   <div class="col">
     <header class="hdr">
       <div class="title">
-        <input id="pname" class="pname" maxlength="120" aria-label="Project name">
+        <input id="pname" class="pname" spellcheck="true" maxlength="120" aria-label="Project name">
         <small id="subline"></small>
       </div>
       <div class="pills">
@@ -335,7 +342,7 @@ input[type=color]{background:var(--field)!important}
         <div class="dh"><div class="t"><b>Schedule assistant</b><small>Proposes changes. You approve them.</small></div>
           <button class="x" id="aiClose" title="Close" aria-label="Close assistant"><svg class="i" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
         <div class="db ai-log" id="aiLog" aria-live="polite"></div>
-        <form class="ai-f" id="aiForm"><textarea id="aiIn" rows="2" maxlength="2000" placeholder="Ask a question or describe a change…" aria-label="Message the schedule assistant"></textarea>
+        <form class="ai-f" id="aiForm"><textarea id="aiIn" rows="2" spellcheck="true" maxlength="2000" placeholder="Ask a question or describe a change…" aria-label="Message the schedule assistant"></textarea>
           <button class="btn pri icon" id="aiSend" type="submit" title="Send" aria-label="Send"><svg class="i" viewBox="0 0 16 16"><path d="M2.5 8h10M8.5 4l4 4-4 4"/></svg></button>
           <button class="btn danger icon" id="aiStop" type="button" hidden title="Stop" aria-label="Stop"><svg class="i" viewBox="0 0 16 16"><rect x="4.5" y="4.5" width="7" height="7" rx="1"/></svg></button></form>
       </aside>
@@ -348,6 +355,9 @@ input[type=color]{background:var(--field)!important}
 
 <script>
 /*JSPDF*/
+</script>
+<script>
+/*SPELL*/
 </script>
 <script>
 /*ENGINE*/
@@ -411,6 +421,7 @@ function sanitize(o) {
     startDate: dt(o.startDate) || today(), dataDate: dt(o.dataDate) || dt(o.startDate) || today(), mustFinishBy: dt(o.mustFinishBy),
     critThreshold: int(o.critThreshold, -999, 999, 0), defaultCal: calIds.has(o.defaultCal) ? o.defaultCal : cals[0].id,
     calendars: cals, wbs, activities: acts, relationships: rels, baseline: bl, layout: sanitizeLayout(o.layout),
+    spell: { off: !!(o.spell && o.spell.off), words: [...new Set((o.spell && Array.isArray(o.spell.words) ? o.spell.words : []).filter((w) => typeof w === 'string' && /^[a-z][a-z'&]{0,39}$/i.test(w)).map((w) => w.toLowerCase()))].slice(0, 2000).sort() },
   };
 }
 
@@ -627,7 +638,7 @@ function cellHtml(c, a, r) {
     case 'name': {
       const stx = r.status === 'done' ? 'Complete' : (r.critical ? 'Critical' : 'Non-critical') + (r.status === 'active' ? ', in progress' : '');
       const ic = a.type === 'task' ? '<span class="dot ' + (r.status === 'done' ? 'done' : r.critical ? 'crit' : r.status === 'active' ? 'active' : '') + '" role="img" aria-label="' + stx + '" title="' + stx + '"></span>' : '<span class="dms" role="img" aria-label="Milestone, ' + stx + '" title="Milestone, ' + stx + '" style="background:' + esc(sc(r.status === 'done' ? P.layout.bars.progress.color : r.critical ? P.layout.bars.critical.color : P.layout.bars.milestone.color)) + '"></span>';
-      return ic + esc(a.name);
+      return ic + markSpell(a.name);
     }
     case 'od': return a.type === 'task' ? a.od : '0';
     case 'rd': return r.status === 'done' ? '0' : a.type === 'task' ? (r.status === 'planned' ? a.od : a.rd) : '0';
@@ -644,7 +655,7 @@ function cellHtml(c, a, r) {
     case 'var': { const v = blVar(a); return v == null ? '' : v < 0 ? '<span class="neg">' + v + '</span>' : v > 0 ? '<span class="pos">+' + v + '</span>' : '0'; }
     case 'pred': return esc(P.relationships.filter((l) => l.to === a.id).map((l) => relTxt(act(l.from).code, l)).join(', '));
     case 'succ': return esc(P.relationships.filter((l) => l.from === a.id).map((l) => relTxt(act(l.to).code, l)).join(', '));
-    case 'res': return esc(a.res); case 'cost': return a.cost ? esc(a.cost.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })) : '';
+    case 'res': return markSpell(a.res); case 'cost': return a.cost ? esc(a.cost.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })) : '';
     case 'cal': return a.cal ? esc(calById(a.cal).name) : '<span style="color:var(--faint)">Default</span>';
     case 'cons': return a.cType ? esc(a.cType + ' ' + fmt(a.cDate)) : '';
     case 'wbs': { const w = P.wbs.find((x) => x.id === a.wbs); return w ? esc((w.code ? w.code + ' ' : '') + w.name) : ''; }
@@ -865,13 +876,13 @@ function renderDetail() {
   const isTask = a.type === 'task';
   $('#dBody').innerHTML = `
   <div class="sec"><h4>General</h4><div class="fg">
-    <label class="f">Activity ID<input class="inp" data-f="code" maxlength="20" value="${esc(a.code)}"></label>
+    <label class="f">Activity ID<input class="inp" data-f="code" spellcheck="false" maxlength="20" value="${esc(a.code)}"></label>
     <label class="f">Type<select class="sel" data-f="type">${[['task', 'Task'], ['start', 'Start milestone'], ['finish', 'Finish milestone']].map(([k, l]) => `<option value="${k}"${a.type === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
-    <label class="f full">Name<input class="inp" data-f="name" maxlength="200" value="${esc(a.name)}"></label>
+    <label class="f full">Name<input class="inp" data-f="name" spellcheck="true" maxlength="200" value="${esc(a.name)}"></label>
     <label class="f">WBS / group<select class="sel" data-f="wbs"><option value="">Unassigned</option>${P.wbs.map((w) => `<option value="${esc(w.id)}"${a.wbs === w.id ? ' selected' : ''}>${esc((w.code ? w.code + ' ' : '') + w.name)}</option>`).join('')}</select></label>
     <label class="f">Calendar<select class="sel" data-f="cal"><option value="">Project default</option>${P.calendars.map((c) => `<option value="${esc(c.id)}"${a.cal === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
     ${isTask ? `<label class="f">Original duration (days)<input class="inp" type="number" min="0" data-f="od" value="${a.od}"></label>` : ''}
-    <label class="f">Responsible / resource<input class="inp" data-f="res" maxlength="120" value="${esc(a.res)}"></label>
+    <label class="f">Responsible / resource<input class="inp" data-f="res" spellcheck="true" maxlength="120" value="${esc(a.res)}"></label>
     ${isTask ? `<label class="f">Budget ($)<input class="inp" type="number" min="0" step="0.01" data-f="cost" value="${a.cost || ''}"></label>` : ''}
   </div></div>
   <div class="sec"><h4>Dates</h4><div class="kv">
@@ -899,7 +910,7 @@ function renderDetail() {
   <div class="sec"><h4>Successors (${succs.length})</h4>${relRows(succs, 's')}
     <div class="addrow"><input class="inp" list="dl-acts" placeholder="Add successor — type ID or name" data-add="s"><button class="btn sm" data-addbtn="s">Add</button></div></div>
   <datalist id="dl-acts">${opts}</datalist>
-  <div class="sec"><h4>Notes</h4><textarea class="inp" data-f="notes" maxlength="${LIM.notes}" placeholder="Notes, delay causes, RFI numbers…">${esc(a.notes)}</textarea></div>
+  <div class="sec"><h4>Notes</h4><textarea class="inp" data-f="notes" spellcheck="true" maxlength="${LIM.notes}" placeholder="Notes, delay causes, RFI numbers…">${esc(a.notes)}</textarea></div>
   <div class="btnrow"><button class="btn sm" data-act="dup">Duplicate</button><button class="btn sm danger" data-act="del">Delete activity</button></div>`;
 }
 
@@ -976,7 +987,7 @@ function startEdit(td) {
   const id = td.parentElement.dataset.id, k = td.dataset.k, a = act(id); if (!a) return;
   const r = S.acts[id] || {};
   const val = k === 'code' ? a.code : k === 'name' ? a.name : k === 'od' ? a.od : k === 'rd' ? a.rd : k === 'res' ? a.res : k === 'cost' ? (a.cost || '') : (r.status === 'done' ? 100 : a.pct);
-  const inp = document.createElement('input'); inp.className = 'cell'; inp.value = val;
+  const inp = document.createElement('input'); inp.className = 'cell'; inp.value = val; inp.spellcheck = k === 'name' || k === 'res';
   if (COLREG[k].ed === 'num') { inp.type = 'number'; inp.min = 0; if (k === 'pct') inp.max = 100; }
   td.textContent = ''; td.appendChild(inp); inp.focus(); inp.select();
   let done = false;
@@ -1024,7 +1035,7 @@ function render() {
   $$('#fseg button').forEach((b) => b.classList.toggle('on', b.dataset.f === ui.filter));
   $$('#zseg button').forEach((b) => b.classList.toggle('on', b.dataset.z === ui.zoom));
   $('#oLinks').checked = P.layout.links; $('#oFloat').checked = P.layout.bars.float.show; $('#oBL').checked = P.layout.bars.target.show;
-  renderTable(); renderGantt(); renderDetail();
+  renderTable(); renderGantt(); renderDetail(); spellBadge();
   document.title = P.name + ' — OpenTrak';
 }
 function markSel() { $$('#grid tr.act').forEach((tr) => tr.classList.toggle('sel', tr.dataset.id === ui.sel)); }
@@ -1748,6 +1759,93 @@ $('#aiLog').addEventListener('click', (e) => {
   if (di != null) { aiLog[+di].state = 'discarded'; renderAi(); aiTurns.push({ role: 'user', content: '(I discarded those proposed changes.)' }); }
   if (un != null) { const m = aiLog[+un]; if (undo.length === m.undoDepth) { doUndo(); m.state = 'discarded'; m.results = ['Undone.']; renderAi(); } else toast('Other edits were made since. Use the Undo button in the header.'); }
 });
+
+// ---------- Spell check (offline: nspell + en_US Hunspell dictionary + construction terms + project dictionary)
+let speller = null;
+const spCache = new Map();
+const spIgnore = new Set(); // ignored for this session only
+function spellInit() {
+  if (speller || !window.NSpell || !window.__SPELL) return;
+  try {
+    speller = window.NSpell(window.__SPELL.aff, window.__SPELL.dic);
+    for (const w of window.__SPELL.words) speller.add(w);
+    window.__SPELL = null; // free the raw text
+    spCache.clear(); render();
+  } catch (e) { speller = null; }
+}
+const projWords = () => new Set((P.spell && P.spell.words) || []);
+function isWordOk(w) {
+  if (!speller) return true;
+  if (w.length < 3 || /\d/.test(w) || (w === w.toUpperCase() && w.length <= 6)) return true; // codes and acronyms
+  const k = w.toLowerCase();
+  if (spIgnore.has(k) || projWords().has(k)) return true;
+  if (spCache.has(w)) return spCache.get(w);
+  const ok = speller.correct(w) || speller.correct(k) || speller.correct(w.replace(/'s$/i, ''));
+  spCache.set(w, ok); return ok;
+}
+const WORD = /[A-Za-z][A-Za-z']*[A-Za-z]|[A-Za-z]/g;
+function spellOn() { return !!speller && !(P.spell && P.spell.off); }
+// escape text, wrapping likely misspellings for the table
+function markSpell(text) {
+  if (!spellOn()) return esc(text);
+  let out = '', last = 0; text = String(text); let m; WORD.lastIndex = 0;
+  while ((m = WORD.exec(text))) {
+    const prev = text[m.index - 1], next = text[m.index + m[0].length];
+    if (/[\d_]/.test(prev || '') || /[\d_]/.test(next || '') || isWordOk(m[0])) continue;
+    out += esc(text.slice(last, m.index)) + '<span class="sp" title="Possible misspelling">' + esc(m[0]) + '</span>'; last = m.index + m[0].length;
+  }
+  return out + esc(text.slice(last));
+}
+function spellIssues() {
+  const list = []; if (!speller) return list;
+  const scan = (text, where, ref) => { const t = String(text || ''); let m; WORD.lastIndex = 0; while ((m = WORD.exec(t))) { const prev = t[m.index - 1], next = t[m.index + m[0].length]; if (/[\d_]/.test(prev || '') || /[\d_]/.test(next || '')) continue; if (!isWordOk(m[0])) list.push({ word: m[0], where, ref }); } };
+  scan(P.name, 'Project name', { kind: 'project' });
+  for (const w of P.wbs) scan(w.name, 'WBS ' + (w.code || '') + ' ' + w.name, { kind: 'wbs', id: w.id });
+  for (const a of P.activities) { scan(a.name, a.code + ' name', { kind: 'act', id: a.id, f: 'name' }); scan(a.res, a.code + ' resource', { kind: 'act', id: a.id, f: 'res' }); scan(a.notes, a.code + ' notes', { kind: 'act', id: a.id, f: 'notes' }); }
+  return list;
+}
+function replaceWord(text, from, to) { const re = new RegExp('(^|[^A-Za-z\\d_\'])' + from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=$|[^A-Za-z\\d_\'])', 'g'); return String(text).replace(re, (m0, pre) => pre + to); }
+function fixWord(word, to) {
+  commit(() => {
+    P.name = replaceWord(P.name, word, to);
+    for (const w of P.wbs) w.name = replaceWord(w.name, word, to);
+    for (const a of P.activities) { a.name = replaceWord(a.name, word, to); a.res = replaceWord(a.res, word, to); a.notes = replaceWord(a.notes, word, to); }
+  });
+}
+function showSpelling() {
+  const draw = () => {
+    if (!speller) { $('#mBody').innerHTML = '<div class="empty">The dictionary is still loading. Try again in a moment.</div>'; return; }
+    const iss = spellIssues(); const by = new Map();
+    for (const x of iss) { const k = x.word; if (!by.has(k)) by.set(k, []); by.get(k).push(x); }
+    const rows = [...by.entries()].map(([w, xs]) => {
+      const sug = speller.suggest(w).slice(0, 4);
+      return '<div class="sprow" data-w="' + esc(w) + '"><div class="spw"><b>' + esc(w) + '</b><small>' + esc(xs.slice(0, 3).map((x) => x.where).join(', ') + (xs.length > 3 ? ' and ' + (xs.length - 3) + ' more' : '')) + '</small></div>'
+        + '<div class="btnrow">' + (sug.length ? sug.map((s2) => '<button class="btn sm" data-fix="' + esc(s2) + '" aria-label="Change ' + esc(w) + ' to ' + esc(s2) + '">' + esc(s2) + '</button>').join('') : '<span class="hint" style="margin:0">No suggestions</span>')
+        + '<button class="btn sm ghost" data-add aria-label="Add ' + esc(w) + ' to the project dictionary">Add to dictionary</button><button class="btn sm ghost" data-ign aria-label="Ignore ' + esc(w) + '">Ignore</button></div></div>';
+    });
+    const pw = [...projWords()].sort();
+    $('#mBody').innerHTML = '<label class="sw" style="margin-bottom:12px"><input type="checkbox" id="spOn"' + (spellOn() ? ' checked' : '') + '> Underline possible misspellings in the table</label>'
+      + (rows.length ? rows.join('') : '<div class="empty">No spelling problems found in activity names, resources, notes or WBS groups.</div>')
+      + '<div class="sec" style="margin-top:14px;border:0"><h4>Project dictionary (' + pw.length + ')</h4>' + (pw.length ? '<div class="chips">' + pw.map((w) => '<span class="chip">' + esc(w) + '<button class="x" data-rmw="' + esc(w) + '" aria-label="Remove ' + esc(w) + ' from the dictionary">×</button></span>').join('') + '</div>' : '<div class="hint">Words you add are saved with this project, so everyone who opens the file shares them.</div>') + '</div>';
+  };
+  modal('Spelling', '', '<button class="btn pri" data-close>Done</button>'); draw();
+  modalHandler = (e) => {
+    const t = e.target;
+    if (e.type === 'change' && t.id === 'spOn') { commit(() => { P.spell = { ...(P.spell || { words: [] }), off: !t.checked }; }); return; }
+    if (e.type !== 'click') return;
+    if (t.dataset.rmw) { commit(() => { P.spell.words = P.spell.words.filter((w) => w !== t.dataset.rmw); }); spCache.clear(); draw(); render(); return; }
+    const row = t.closest('[data-w]'); if (!row) return; const w = row.dataset.w;
+    if (t.dataset.fix) { fixWord(w, t.dataset.fix); toast('Changed “' + w + '” to “' + t.dataset.fix + '”'); draw(); }
+    else if (t.hasAttribute('data-add')) { commit(() => { const s = P.spell || { words: [], off: false }; P.spell = { ...s, words: [...new Set([...(s.words || []), w.toLowerCase()])].sort() }; }); spCache.clear(); toast('Added “' + w + '” to the project dictionary'); draw(); render(); }
+    else if (t.hasAttribute('data-ign')) { spIgnore.add(w.toLowerCase()); spCache.clear(); draw(); render(); }
+  };
+}
+function spellBadge() {
+  const n = speller && spellOn() ? new Set(spellIssues().map((x) => x.word.toLowerCase())).size : 0;
+  const b = $('#spCnt'); b.textContent = n; b.hidden = !n; $('#bSpell').setAttribute('aria-label', 'Spelling' + (n ? ', ' + n + ' possible misspelling' + (n > 1 ? 's' : '') : ''));
+}
+$('#bSpell').onclick = showSpelling;
+setTimeout(spellInit, 300);
 
 // ---------- events
 $('#grid').addEventListener('click', (e) => {
