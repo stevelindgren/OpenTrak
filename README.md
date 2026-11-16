@@ -15,7 +15,8 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Automatic recalculation on every edit (no F9)
 
 **Interface**
-- Dark theme by default with a light theme toggle; IBM Plex Sans embedded so it works offline
+- Construction-styled dark theme (asphalt, concrete and safety yellow) with a light "concrete" theme; IBM Plex Sans embedded so it works offline
+- Accessibility: WCAG 2.2 AA contrast in both themes (checked with axe-core), labeled controls, keyboard focus kept in dialogs, and a color-blind-safe bar preset
 - Activity table grouped by WBS, with inline editing (click a cell, then Enter or Tab)
 - Gantt chart with critical path, progress, float, baselines and logic lines
 - Drag from a bar's end to another bar to link them, or drag a bar's edge to change its duration
@@ -26,7 +27,7 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 
 **Formatting** (saved with the project)
 - Format Bars: color, thickness and position for each bar type; milestone shapes; bar labels; row height and text size
-- Presets for "SureTrak classic" and "Modern"
+- Presets for "SureTrak classic", "Color-blind safe" (Okabe-Ito palette) and "Modern"
 - 24 available columns: choose, reorder, and drag header edges to resize
 
 **Output**
