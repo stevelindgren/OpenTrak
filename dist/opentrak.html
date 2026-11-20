@@ -215,6 +215,12 @@ textarea.inp{height:auto;min-height:70px;padding:8px 9px;resize:vertical}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .chip{display:inline-flex;align-items:center;gap:2px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:1px 2px 1px 10px;font-size:12px}
 .chip .x{width:22px;height:22px}
+.holhead{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:12px 0 6px}
+.holgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:4px}
+.hol{display:flex;align-items:flex-start;gap:6px;border:1px solid var(--field-line);border-radius:6px;padding:5px 8px;font-size:12px;background:var(--field);cursor:pointer}
+.hol input{margin-top:2px}.hol small{display:block;color:var(--muted);font-size:11px}
+.holbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.holprev{margin-top:8px;font-size:12px}.holprev summary{cursor:pointer;color:var(--muted)}
 .calcard{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:var(--panel-2)}
 .issue{display:flex;gap:10px;padding:10px 8px;border-bottom:1px solid var(--line-2);cursor:pointer;border-radius:8px;align-items:flex-start}
 .issue:hover{background:var(--hover)}
@@ -802,11 +808,57 @@ window.__SPELL={"aff":"SET UTF-8\nTRY esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYF
   function toIso(dn) { return new Date(dn * DAY).toISOString().slice(0, 10); }
   function weekday(dn) { return (((dn + 4) % 7) + 7) % 7; } // 0 = Sunday
 
+  // Recurring holidays. fixed: true = a set calendar date that moves to Fri/Mon when it falls on a weekend (if observe is on).
+  const nthDow = (y, m, dow, n) => { const first = toDn(y + '-' + String(m).padStart(2, '0') + '-01'); const off = (dow - weekday(first) + 7) % 7; return first + off + (n - 1) * 7; };
+  const lastDow = (y, m, dow) => { const last = toDn(new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10)); return last - ((weekday(last) - dow + 7) % 7); };
+  const ymd = (y, m, d) => toDn(y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0'));
+  function easter(y) { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1; return ymd(y, mo, da); }
+  const HOLIDAYS = [
+    { id: 'newyear', name: "New Year's Day", rule: 'Jan 1', fixed: true, on: (y) => ymd(y, 1, 1) },
+    { id: 'mlk', name: 'Martin Luther King Jr. Day', rule: '3rd Mon in Jan', on: (y) => nthDow(y, 1, 1, 3) },
+    { id: 'lincoln', name: "Lincoln's Birthday", rule: 'Feb 12', fixed: true, on: (y) => ymd(y, 2, 12) },
+    { id: 'presidents', name: "Presidents' Day", rule: '3rd Mon in Feb', on: (y) => nthDow(y, 2, 1, 3) },
+    { id: 'goodfriday', name: 'Good Friday', rule: 'Friday before Easter', on: (y) => easter(y) - 2 },
+    { id: 'memorial', name: 'Memorial Day', rule: 'Last Mon in May', on: (y) => lastDow(y, 5, 1) },
+    { id: 'juneteenth', name: 'Juneteenth', rule: 'Jun 19', fixed: true, on: (y) => ymd(y, 6, 19) },
+    { id: 'july4', name: 'Independence Day', rule: 'Jul 4', fixed: true, on: (y) => ymd(y, 7, 4) },
+    { id: 'labor', name: 'Labor Day', rule: '1st Mon in Sep', on: (y) => nthDow(y, 9, 1, 1) },
+    { id: 'columbus', name: 'Columbus Day', rule: '2nd Mon in Oct', on: (y) => nthDow(y, 10, 1, 2) },
+    { id: 'election', name: 'Election Day', rule: 'Tue after 1st Mon in Nov', on: (y) => nthDow(y, 11, 1, 1) + 1 },
+    { id: 'veterans', name: 'Veterans Day', rule: 'Nov 11', fixed: true, on: (y) => ymd(y, 11, 11) },
+    { id: 'thanksgiving', name: 'Thanksgiving', rule: '4th Thu in Nov', on: (y) => nthDow(y, 11, 4, 4) },
+    { id: 'dayafter', name: 'Day after Thanksgiving', rule: 'Fri after Thanksgiving', on: (y) => nthDow(y, 11, 4, 4) + 1 },
+    { id: 'xmaseve', name: 'Christmas Eve', rule: 'Dec 24', fixed: true, on: (y) => ymd(y, 12, 24) },
+    { id: 'christmas', name: 'Christmas Day', rule: 'Dec 25', fixed: true, on: (y) => ymd(y, 12, 25) },
+    { id: 'nye', name: "New Year's Eve", rule: 'Dec 31', fixed: true, on: (y) => ymd(y, 12, 31) },
+  ];
+  const HOL_IDS = new Set(HOLIDAYS.map((h) => h.id));
+  const DEFAULT_HOLIDAYS = ['newyear', 'mlk', 'presidents', 'goodfriday', 'memorial', 'july4', 'labor', 'columbus', 'election', 'veterans', 'thanksgiving', 'dayafter', 'christmas'];
+  // Dates (day numbers) of the chosen recurring holidays that fall in year y.
+  function ruleDates(rules, observe, y) {
+    const out = [];
+    for (const h of HOLIDAYS) {
+      if (!rules.includes(h.id)) continue;
+      for (const yy of [y - 1, y, y + 1]) {
+        let d = h.on(yy);
+        if (observe && h.fixed) { const w = weekday(d); if (w === 6) d -= 1; else if (w === 0) d += 1; }
+        if (new Date(d * DAY).getUTCFullYear() === y) out.push({ dn: d, id: h.id, name: h.name });
+      }
+    }
+    return out.sort((a, b) => a.dn - b.dn);
+  }
+
   function makeCal(c) {
     const wd = (c.workDays || []).slice(0, 7).map(Boolean);
     if (wd.length !== 7 || !wd.some(Boolean)) throw new Error('Calendar "' + c.name + '" has no work days.');
     const hol = new Set((c.holidays || []).filter(isIso).map(toDn));
-    const isWork = (d) => wd[weekday(d)] && !hol.has(d);
+    const rules = (c.rules || []).filter((r) => HOL_IDS.has(r)), observe = c.observe !== false, done = new Set();
+    const yearOf = (d) => new Date(d * DAY).getUTCFullYear();
+    const isWork = (d) => {
+      if (!wd[weekday(d)]) return false;
+      if (rules.length) { const y = yearOf(d); if (!done.has(y)) { done.add(y); for (const r of ruleDates(rules, observe, y)) hol.add(r.dn); } }
+      return !hol.has(d);
+    };
     const fail = () => { throw new Error('Calendar "' + c.name + '" has no work days for 10 years around a date.'); };
     return {
       id: c.id, name: c.name, isWork,
@@ -1010,7 +1062,7 @@ window.__SPELL={"aff":"SET UTF-8\nTRY esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYF
     }
   }
 
-  const api = { schedule, makeCal, toDn, toIso, isIso, weekday };
+  const api = { schedule, makeCal, toDn, toIso, isIso, weekday, HOLIDAYS, DEFAULT_HOLIDAYS, ruleDates };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.CPM = api;
 })(typeof self !== 'undefined' ? self : this);
 
@@ -1041,6 +1093,8 @@ function sanitize(o) {
     id: str(c.id, 40) || uid(), name: str(c.name, 80) || 'Calendar',
     workDays: Array.from({ length: 7 }, (_, i) => !!(c.workDays || [])[i]),
     holidays: [...new Set((Array.isArray(c.holidays) ? c.holidays : []).filter(CPM.isIso))].sort().slice(0, 2000),
+    rules: Array.isArray(c.rules) ? [...new Set(c.rules.filter((r) => CPM.HOLIDAYS.some((h) => h.id === r)))] : (c.id === 'std5' ? CPM.DEFAULT_HOLIDAYS.slice() : []),
+    observe: c.observe !== false,
   })).filter((c) => c.workDays.some(Boolean));
   if (!cals.length) cals.push(defaultCals()[0]);
   const calIds = new Set(cals.map((c) => c.id));
@@ -1081,8 +1135,8 @@ function sanitize(o) {
 function defaultCals() {
   return [
     { id: 'std5', name: 'Standard 5-day', workDays: [false, true, true, true, true, true, false],
-      holidays: ['2026-01-01','2026-05-25','2026-07-03','2026-09-07','2026-11-26','2026-11-27','2026-12-25','2027-01-01','2027-05-31','2027-07-05','2027-09-06','2027-11-25','2027-11-26','2027-12-24'] },
-    { id: 'cal7', name: '7-day (fabrication / calendar days)', workDays: [true, true, true, true, true, true, true], holidays: [] },
+      holidays: [], rules: CPM.DEFAULT_HOLIDAYS.slice(), observe: true },
+    { id: 'cal7', name: '7-day (fabrication / calendar days)', workDays: [true, true, true, true, true, true, true], holidays: [], rules: [], observe: true },
   ];
 }
 
@@ -1739,6 +1793,18 @@ function showBaseline() {
     if (e.target.id === 'blClear') { commit(() => { P.baseline = null; }); closeModal(); toast('Baseline cleared'); }
   };
 }
+function holPreview(c) {
+  const rules = c.rules || [];
+  if (!rules.length) return '';
+  const y0 = +String(P.startDate || today()).slice(0, 4);
+  let y1 = +String(S && S.finish ? S.finish : '').slice(0, 4); if (!Number.isFinite(y1) || y1 < y0) y1 = y0 + 1; y1 = Math.min(y1, y0 + 6);
+  let h = '<details class="holprev"><summary>Holiday dates ' + y0 + (y1 > y0 ? '–' + y1 : '') + ' (project span)</summary><div class="chips">';
+  for (let y = y0; y <= y1; y++) for (const r of CPM.ruleDates(rules, c.observe !== false, y)) {
+    const iso = CPM.toIso(r.dn); const wk = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][CPM.weekday(r.dn)];
+    h += '<span class="chip" style="padding-right:10px" title="' + esc(r.name) + '">' + esc(wk + ' ' + fmt(iso)) + ' · ' + esc(r.name) + '</span>';
+  }
+  return h + '</div></details>';
+}
 function showCalendars() {
   const draw = () => {
     $('#mBody').innerHTML = P.calendars.map((c) => {
@@ -1747,8 +1813,14 @@ function showCalendars() {
         + '<label class="chk"><input type="radio" name="defcal" data-cdef ' + (P.defaultCal === c.id ? 'checked' : '') + '> Default</label>'
         + (P.calendars.length > 1 && P.defaultCal !== c.id ? '<button class="x" data-cdel title="Delete calendar">×</button>' : '') + '</div>'
         + '<div class="wd">' + ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => '<label><input type="checkbox" data-wd="' + i + '" ' + (c.workDays[i] ? 'checked' : '') + '>' + d + '</label>').join('') + '</div>'
-        + '<div class="addrow"><input type="date" class="inp" data-hd style="max-width:170px"><button class="btn sm" data-hadd>Add holiday / non-work day</button></div>'
-        + '<div class="chips">' + (c.holidays.length ? c.holidays.map((h) => '<span class="chip">' + esc(fmt(h)) + '<button class="x" data-hdel="' + esc(h) + '">×</button></span>').join('') : '<span class="hint">No holidays</span>') + '</div>'
+        + '<div class="holhead"><b>Recurring holidays</b><span class="hint">Applied every year automatically — dates push on their own.</span></div>'
+        + '<div class="holgrid">' + CPM.HOLIDAYS.map((h) => '<label class="hol"><input type="checkbox" data-hr="' + h.id + '" ' + ((c.rules || []).includes(h.id) ? 'checked' : '') + '><span>' + esc(h.name) + '<small>' + esc(h.rule) + '</small></span></label>').join('') + '</div>'
+        + '<div class="holbar"><button class="btn sm" data-hstd>Standard set</button><button class="btn sm ghost" data-hall>All</button><button class="btn sm ghost" data-hnone>None</button>'
+        + '<label class="chk" style="margin-left:auto"><input type="checkbox" data-hobs ' + (c.observe !== false ? 'checked' : '') + '> Weekend holidays move to Fri / Mon</label></div>'
+        + holPreview(c)
+        + '<div class="holhead" style="margin-top:12px"><b>Other non-work days</b><span class="hint">One-off dates (shutdowns, building restrictions).</span></div>'
+        + '<div class="addrow"><input type="date" class="inp" data-hd style="max-width:170px"><button class="btn sm" data-hadd>Add non-work day</button></div>'
+        + '<div class="chips">' + (c.holidays.length ? c.holidays.map((h) => '<span class="chip">' + esc(fmt(h)) + '<button class="x" data-hdel="' + esc(h) + '">×</button></span>').join('') : '<span class="hint">None</span>') + '</div>'
         + '<div class="hint">' + used + ' activit' + (used === 1 ? 'y uses' : 'ies use') + ' this calendar' + (P.defaultCal === c.id ? ' (plus every activity set to the project default)' : '') + '.</div></div>';
     }).join('') + '<button class="btn" data-cadd>＋ New calendar</button>';
   };
@@ -1760,6 +1832,9 @@ function showCalendars() {
     if (e.type === 'click' && e.target.matches('[data-cdel]')) { commit(() => { P.calendars = P.calendars.filter((x) => x.id !== c.id); P.activities.forEach((a) => { if (a.cal === c.id) a.cal = ''; }); }); draw(); }
     if (e.type === 'click' && e.target.matches('[data-hadd]')) { const v = dt($('[data-hd]', card).value); if (!v) { toast('Pick a date first'); return; } commit(() => { if (!c.holidays.includes(v)) { c.holidays.push(v); c.holidays.sort(); } }); draw(); }
     if (e.type === 'click' && e.target.matches('[data-hdel]')) { commit(() => { c.holidays = c.holidays.filter((h) => h !== e.target.dataset.hdel); }); draw(); }
+    if (e.type === 'change' && e.target.matches('[data-hr]')) { const id = e.target.dataset.hr, on = e.target.checked; commit(() => { const s = new Set(c.rules || []); if (on) s.add(id); else s.delete(id); c.rules = CPM.HOLIDAYS.map((h) => h.id).filter((x) => s.has(x)); }); draw(); }
+    if (e.type === 'change' && e.target.matches('[data-hobs]')) { commit(() => { c.observe = e.target.checked; }); draw(); }
+    if (e.type === 'click' && e.target.matches('[data-hstd],[data-hall],[data-hnone]')) { const v = e.target.matches('[data-hstd]') ? CPM.DEFAULT_HOLIDAYS.slice() : e.target.matches('[data-hall]') ? CPM.HOLIDAYS.map((h) => h.id) : []; commit(() => { c.rules = v; }); draw(); }
     if (e.type === 'change' && e.target.matches('[data-wd]')) { const i = +e.target.dataset.wd; if (!e.target.checked && c.workDays.filter(Boolean).length === 1) { toast('A calendar needs at least one work day'); e.target.checked = true; return; } commit(() => { c.workDays[i] = e.target.checked; }); }
     if (e.type === 'change' && e.target.matches('[data-cn]')) commit(() => { c.name = str(e.target.value, 80) || 'Calendar'; });
     if (e.type === 'change' && e.target.matches('[data-cdef]')) { commit(() => { P.defaultCal = c.id; }); draw(); }
@@ -2231,7 +2306,7 @@ function snapshot() {
   }
   const bl = P.baseline ? 'Baseline "' + P.baseline.name + '" finish ' + P.baseline.finish : 'No baseline';
   return 'PROJECT: ' + P.name + '\nStart ' + P.startDate + ', data date ' + P.dataDate + ', calculated finish ' + S.finish + (P.mustFinishBy ? ', must finish by ' + P.mustFinishBy : '') + '. ' + bl + '.\n'
-    + 'Default calendar: ' + calById(P.defaultCal).name + '. Calendars: ' + P.calendars.map((c) => c.name).join('; ') + '.\n'
+    + 'Default calendar: ' + calById(P.defaultCal).name + '. Calendars: ' + P.calendars.map((c) => c.name + ((c.rules || []).length ? ' (recurring holidays: ' + c.rules.map((r) => (CPM.HOLIDAYS.find((h) => h.id === r) || {}).name).join(', ') + ')' : '')).join('; ') + '.\n'
     + 'WBS groups (code: name): ' + (P.wbs.map((w) => (w.code || '-') + ': ' + w.name).join('; ') || 'none') + '.\n'
     + 'Schedule check: ' + ([...S.errors, ...S.warnings].map((x) => x.msg).slice(0, 12).join(' ') || 'no issues') + '\n'
     + 'ACTIVITIES (code | name | wbs | type | orig dur | rem dur | % | actual start | actual finish | early start | early finish | total float | critical | constraint | calendar | predecessors | resource):\n'

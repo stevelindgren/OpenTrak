@@ -212,6 +212,12 @@ textarea.inp{height:auto;min-height:70px;padding:8px 9px;resize:vertical}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .chip{display:inline-flex;align-items:center;gap:2px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:1px 2px 1px 10px;font-size:12px}
 .chip .x{width:22px;height:22px}
+.holhead{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:12px 0 6px}
+.holgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:4px}
+.hol{display:flex;align-items:flex-start;gap:6px;border:1px solid var(--field-line);border-radius:6px;padding:5px 8px;font-size:12px;background:var(--field);cursor:pointer}
+.hol input{margin-top:2px}.hol small{display:block;color:var(--muted);font-size:11px}
+.holbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.holprev{margin-top:8px;font-size:12px}.holprev summary{cursor:pointer;color:var(--muted)}
 .calcard{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:var(--panel-2)}
 .issue{display:flex;gap:10px;padding:10px 8px;border-bottom:1px solid var(--line-2);cursor:pointer;border-radius:8px;align-items:flex-start}
 .issue:hover{background:var(--hover)}
@@ -388,6 +394,8 @@ function sanitize(o) {
     id: str(c.id, 40) || uid(), name: str(c.name, 80) || 'Calendar',
     workDays: Array.from({ length: 7 }, (_, i) => !!(c.workDays || [])[i]),
     holidays: [...new Set((Array.isArray(c.holidays) ? c.holidays : []).filter(CPM.isIso))].sort().slice(0, 2000),
+    rules: Array.isArray(c.rules) ? [...new Set(c.rules.filter((r) => CPM.HOLIDAYS.some((h) => h.id === r)))] : (c.id === 'std5' ? CPM.DEFAULT_HOLIDAYS.slice() : []),
+    observe: c.observe !== false,
   })).filter((c) => c.workDays.some(Boolean));
   if (!cals.length) cals.push(defaultCals()[0]);
   const calIds = new Set(cals.map((c) => c.id));
@@ -428,8 +436,8 @@ function sanitize(o) {
 function defaultCals() {
   return [
     { id: 'std5', name: 'Standard 5-day', workDays: [false, true, true, true, true, true, false],
-      holidays: ['2026-01-01','2026-05-25','2026-07-03','2026-09-07','2026-11-26','2026-11-27','2026-12-25','2027-01-01','2027-05-31','2027-07-05','2027-09-06','2027-11-25','2027-11-26','2027-12-24'] },
-    { id: 'cal7', name: '7-day (fabrication / calendar days)', workDays: [true, true, true, true, true, true, true], holidays: [] },
+      holidays: [], rules: CPM.DEFAULT_HOLIDAYS.slice(), observe: true },
+    { id: 'cal7', name: '7-day (fabrication / calendar days)', workDays: [true, true, true, true, true, true, true], holidays: [], rules: [], observe: true },
   ];
 }
 
@@ -1086,6 +1094,18 @@ function showBaseline() {
     if (e.target.id === 'blClear') { commit(() => { P.baseline = null; }); closeModal(); toast('Baseline cleared'); }
   };
 }
+function holPreview(c) {
+  const rules = c.rules || [];
+  if (!rules.length) return '';
+  const y0 = +String(P.startDate || today()).slice(0, 4);
+  let y1 = +String(S && S.finish ? S.finish : '').slice(0, 4); if (!Number.isFinite(y1) || y1 < y0) y1 = y0 + 1; y1 = Math.min(y1, y0 + 6);
+  let h = '<details class="holprev"><summary>Holiday dates ' + y0 + (y1 > y0 ? '–' + y1 : '') + ' (project span)</summary><div class="chips">';
+  for (let y = y0; y <= y1; y++) for (const r of CPM.ruleDates(rules, c.observe !== false, y)) {
+    const iso = CPM.toIso(r.dn); const wk = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][CPM.weekday(r.dn)];
+    h += '<span class="chip" style="padding-right:10px" title="' + esc(r.name) + '">' + esc(wk + ' ' + fmt(iso)) + ' · ' + esc(r.name) + '</span>';
+  }
+  return h + '</div></details>';
+}
 function showCalendars() {
   const draw = () => {
     $('#mBody').innerHTML = P.calendars.map((c) => {
@@ -1094,8 +1114,14 @@ function showCalendars() {
         + '<label class="chk"><input type="radio" name="defcal" data-cdef ' + (P.defaultCal === c.id ? 'checked' : '') + '> Default</label>'
         + (P.calendars.length > 1 && P.defaultCal !== c.id ? '<button class="x" data-cdel title="Delete calendar">×</button>' : '') + '</div>'
         + '<div class="wd">' + ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => '<label><input type="checkbox" data-wd="' + i + '" ' + (c.workDays[i] ? 'checked' : '') + '>' + d + '</label>').join('') + '</div>'
-        + '<div class="addrow"><input type="date" class="inp" data-hd style="max-width:170px"><button class="btn sm" data-hadd>Add holiday / non-work day</button></div>'
-        + '<div class="chips">' + (c.holidays.length ? c.holidays.map((h) => '<span class="chip">' + esc(fmt(h)) + '<button class="x" data-hdel="' + esc(h) + '">×</button></span>').join('') : '<span class="hint">No holidays</span>') + '</div>'
+        + '<div class="holhead"><b>Recurring holidays</b><span class="hint">Applied every year automatically — dates push on their own.</span></div>'
+        + '<div class="holgrid">' + CPM.HOLIDAYS.map((h) => '<label class="hol"><input type="checkbox" data-hr="' + h.id + '" ' + ((c.rules || []).includes(h.id) ? 'checked' : '') + '><span>' + esc(h.name) + '<small>' + esc(h.rule) + '</small></span></label>').join('') + '</div>'
+        + '<div class="holbar"><button class="btn sm" data-hstd>Standard set</button><button class="btn sm ghost" data-hall>All</button><button class="btn sm ghost" data-hnone>None</button>'
+        + '<label class="chk" style="margin-left:auto"><input type="checkbox" data-hobs ' + (c.observe !== false ? 'checked' : '') + '> Weekend holidays move to Fri / Mon</label></div>'
+        + holPreview(c)
+        + '<div class="holhead" style="margin-top:12px"><b>Other non-work days</b><span class="hint">One-off dates (shutdowns, building restrictions).</span></div>'
+        + '<div class="addrow"><input type="date" class="inp" data-hd style="max-width:170px"><button class="btn sm" data-hadd>Add non-work day</button></div>'
+        + '<div class="chips">' + (c.holidays.length ? c.holidays.map((h) => '<span class="chip">' + esc(fmt(h)) + '<button class="x" data-hdel="' + esc(h) + '">×</button></span>').join('') : '<span class="hint">None</span>') + '</div>'
         + '<div class="hint">' + used + ' activit' + (used === 1 ? 'y uses' : 'ies use') + ' this calendar' + (P.defaultCal === c.id ? ' (plus every activity set to the project default)' : '') + '.</div></div>';
     }).join('') + '<button class="btn" data-cadd>＋ New calendar</button>';
   };
@@ -1107,6 +1133,9 @@ function showCalendars() {
     if (e.type === 'click' && e.target.matches('[data-cdel]')) { commit(() => { P.calendars = P.calendars.filter((x) => x.id !== c.id); P.activities.forEach((a) => { if (a.cal === c.id) a.cal = ''; }); }); draw(); }
     if (e.type === 'click' && e.target.matches('[data-hadd]')) { const v = dt($('[data-hd]', card).value); if (!v) { toast('Pick a date first'); return; } commit(() => { if (!c.holidays.includes(v)) { c.holidays.push(v); c.holidays.sort(); } }); draw(); }
     if (e.type === 'click' && e.target.matches('[data-hdel]')) { commit(() => { c.holidays = c.holidays.filter((h) => h !== e.target.dataset.hdel); }); draw(); }
+    if (e.type === 'change' && e.target.matches('[data-hr]')) { const id = e.target.dataset.hr, on = e.target.checked; commit(() => { const s = new Set(c.rules || []); if (on) s.add(id); else s.delete(id); c.rules = CPM.HOLIDAYS.map((h) => h.id).filter((x) => s.has(x)); }); draw(); }
+    if (e.type === 'change' && e.target.matches('[data-hobs]')) { commit(() => { c.observe = e.target.checked; }); draw(); }
+    if (e.type === 'click' && e.target.matches('[data-hstd],[data-hall],[data-hnone]')) { const v = e.target.matches('[data-hstd]') ? CPM.DEFAULT_HOLIDAYS.slice() : e.target.matches('[data-hall]') ? CPM.HOLIDAYS.map((h) => h.id) : []; commit(() => { c.rules = v; }); draw(); }
     if (e.type === 'change' && e.target.matches('[data-wd]')) { const i = +e.target.dataset.wd; if (!e.target.checked && c.workDays.filter(Boolean).length === 1) { toast('A calendar needs at least one work day'); e.target.checked = true; return; } commit(() => { c.workDays[i] = e.target.checked; }); }
     if (e.type === 'change' && e.target.matches('[data-cn]')) commit(() => { c.name = str(e.target.value, 80) || 'Calendar'; });
     if (e.type === 'change' && e.target.matches('[data-cdef]')) { commit(() => { P.defaultCal = c.id; }); draw(); }
@@ -1578,7 +1607,7 @@ function snapshot() {
   }
   const bl = P.baseline ? 'Baseline "' + P.baseline.name + '" finish ' + P.baseline.finish : 'No baseline';
   return 'PROJECT: ' + P.name + '\nStart ' + P.startDate + ', data date ' + P.dataDate + ', calculated finish ' + S.finish + (P.mustFinishBy ? ', must finish by ' + P.mustFinishBy : '') + '. ' + bl + '.\n'
-    + 'Default calendar: ' + calById(P.defaultCal).name + '. Calendars: ' + P.calendars.map((c) => c.name).join('; ') + '.\n'
+    + 'Default calendar: ' + calById(P.defaultCal).name + '. Calendars: ' + P.calendars.map((c) => c.name + ((c.rules || []).length ? ' (recurring holidays: ' + c.rules.map((r) => (CPM.HOLIDAYS.find((h) => h.id === r) || {}).name).join(', ') + ')' : '')).join('; ') + '.\n'
     + 'WBS groups (code: name): ' + (P.wbs.map((w) => (w.code || '-') + ': ' + w.name).join('; ') || 'none') + '.\n'
     + 'Schedule check: ' + ([...S.errors, ...S.warnings].map((x) => x.msg).slice(0, 12).join(' ') || 'no issues') + '\n'
     + 'ACTIVITIES (code | name | wbs | type | orig dur | rem dur | % | actual start | actual finish | early start | early finish | total float | critical | constraint | calendar | predecessors | resource):\n'

@@ -9,7 +9,7 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 **Scheduling engine (CPM)**
 - Forward and backward pass with total float, free float and the critical path
 - All four relationship types (FS, SS, FF, SF), with lags and leads in work days
-- Multiple calendars with work weeks and holidays (US construction holidays for 2026–27 included)
+- Multiple calendars with work weeks and holidays. Recurring holidays (New Year's, MLK, Presidents', Good Friday, Memorial, July 4th, Labor, Columbus, Election Day, Veterans, Thanksgiving and the day after, Christmas, plus optional Juneteenth, Lincoln's Birthday, Christmas Eve and New Year's Eve) are worked out for every year automatically, with weekend holidays moved to Friday or Monday; one-off non-work days can be added too
 - Constraints: start on or after/before, finish on or after/before, must start on, must finish on, and a project "must finish by" date
 - Progress: data date, actual start and finish, % complete, remaining duration, with retained logic
 - Automatic recalculation on every edit (no F9)
