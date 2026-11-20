@@ -19,11 +19,57 @@
   function toIso(dn) { return new Date(dn * DAY).toISOString().slice(0, 10); }
   function weekday(dn) { return (((dn + 4) % 7) + 7) % 7; } // 0 = Sunday
 
+  // Recurring holidays. fixed: true = a set calendar date that moves to Fri/Mon when it falls on a weekend (if observe is on).
+  const nthDow = (y, m, dow, n) => { const first = toDn(y + '-' + String(m).padStart(2, '0') + '-01'); const off = (dow - weekday(first) + 7) % 7; return first + off + (n - 1) * 7; };
+  const lastDow = (y, m, dow) => { const last = toDn(new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10)); return last - ((weekday(last) - dow + 7) % 7); };
+  const ymd = (y, m, d) => toDn(y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0'));
+  function easter(y) { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1; return ymd(y, mo, da); }
+  const HOLIDAYS = [
+    { id: 'newyear', name: "New Year's Day", rule: 'Jan 1', fixed: true, on: (y) => ymd(y, 1, 1) },
+    { id: 'mlk', name: 'Martin Luther King Jr. Day', rule: '3rd Mon in Jan', on: (y) => nthDow(y, 1, 1, 3) },
+    { id: 'lincoln', name: "Lincoln's Birthday", rule: 'Feb 12', fixed: true, on: (y) => ymd(y, 2, 12) },
+    { id: 'presidents', name: "Presidents' Day", rule: '3rd Mon in Feb', on: (y) => nthDow(y, 2, 1, 3) },
+    { id: 'goodfriday', name: 'Good Friday', rule: 'Friday before Easter', on: (y) => easter(y) - 2 },
+    { id: 'memorial', name: 'Memorial Day', rule: 'Last Mon in May', on: (y) => lastDow(y, 5, 1) },
+    { id: 'juneteenth', name: 'Juneteenth', rule: 'Jun 19', fixed: true, on: (y) => ymd(y, 6, 19) },
+    { id: 'july4', name: 'Independence Day', rule: 'Jul 4', fixed: true, on: (y) => ymd(y, 7, 4) },
+    { id: 'labor', name: 'Labor Day', rule: '1st Mon in Sep', on: (y) => nthDow(y, 9, 1, 1) },
+    { id: 'columbus', name: 'Columbus Day', rule: '2nd Mon in Oct', on: (y) => nthDow(y, 10, 1, 2) },
+    { id: 'election', name: 'Election Day', rule: 'Tue after 1st Mon in Nov', on: (y) => nthDow(y, 11, 1, 1) + 1 },
+    { id: 'veterans', name: 'Veterans Day', rule: 'Nov 11', fixed: true, on: (y) => ymd(y, 11, 11) },
+    { id: 'thanksgiving', name: 'Thanksgiving', rule: '4th Thu in Nov', on: (y) => nthDow(y, 11, 4, 4) },
+    { id: 'dayafter', name: 'Day after Thanksgiving', rule: 'Fri after Thanksgiving', on: (y) => nthDow(y, 11, 4, 4) + 1 },
+    { id: 'xmaseve', name: 'Christmas Eve', rule: 'Dec 24', fixed: true, on: (y) => ymd(y, 12, 24) },
+    { id: 'christmas', name: 'Christmas Day', rule: 'Dec 25', fixed: true, on: (y) => ymd(y, 12, 25) },
+    { id: 'nye', name: "New Year's Eve", rule: 'Dec 31', fixed: true, on: (y) => ymd(y, 12, 31) },
+  ];
+  const HOL_IDS = new Set(HOLIDAYS.map((h) => h.id));
+  const DEFAULT_HOLIDAYS = ['newyear', 'mlk', 'presidents', 'goodfriday', 'memorial', 'july4', 'labor', 'columbus', 'election', 'veterans', 'thanksgiving', 'dayafter', 'christmas'];
+  // Dates (day numbers) of the chosen recurring holidays that fall in year y.
+  function ruleDates(rules, observe, y) {
+    const out = [];
+    for (const h of HOLIDAYS) {
+      if (!rules.includes(h.id)) continue;
+      for (const yy of [y - 1, y, y + 1]) {
+        let d = h.on(yy);
+        if (observe && h.fixed) { const w = weekday(d); if (w === 6) d -= 1; else if (w === 0) d += 1; }
+        if (new Date(d * DAY).getUTCFullYear() === y) out.push({ dn: d, id: h.id, name: h.name });
+      }
+    }
+    return out.sort((a, b) => a.dn - b.dn);
+  }
+
   function makeCal(c) {
     const wd = (c.workDays || []).slice(0, 7).map(Boolean);
     if (wd.length !== 7 || !wd.some(Boolean)) throw new Error('Calendar "' + c.name + '" has no work days.');
     const hol = new Set((c.holidays || []).filter(isIso).map(toDn));
-    const isWork = (d) => wd[weekday(d)] && !hol.has(d);
+    const rules = (c.rules || []).filter((r) => HOL_IDS.has(r)), observe = c.observe !== false, done = new Set();
+    const yearOf = (d) => new Date(d * DAY).getUTCFullYear();
+    const isWork = (d) => {
+      if (!wd[weekday(d)]) return false;
+      if (rules.length) { const y = yearOf(d); if (!done.has(y)) { done.add(y); for (const r of ruleDates(rules, observe, y)) hol.add(r.dn); } }
+      return !hol.has(d);
+    };
     const fail = () => { throw new Error('Calendar "' + c.name + '" has no work days for 10 years around a date.'); };
     return {
       id: c.id, name: c.name, isWork,
@@ -227,6 +273,6 @@
     }
   }
 
-  const api = { schedule, makeCal, toDn, toIso, isIso, weekday };
+  const api = { schedule, makeCal, toDn, toIso, isIso, weekday, HOLIDAYS, DEFAULT_HOLIDAYS, ruleDates };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.CPM = api;
 })(typeof self !== 'undefined' ? self : this);

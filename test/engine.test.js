@@ -77,4 +77,18 @@ t('performance 3000 activities', () => {
   const acts = [], rels = []; for (let i = 0; i < 3000; i++) { acts.push(A('A' + i, 1 + (i % 7))); if (i) rels.push(L('A' + (i - 1), 'A' + i)); if (i > 10 && i % 3 == 0) rels.push(L('A' + (i - 10), 'A' + i, 'SS', 2)); }
   const t0 = Date.now(); run(acts, rels); const ms = Date.now() - t0; console.log('   3000 acts in', ms, 'ms'); assert(ms < 3000);
 });
+t('recurring holiday rules (2027)', () => {
+  const ds = (y) => C.ruleDates(C.DEFAULT_HOLIDAYS, true, y).map((r) => C.toIso(r.dn) + ' ' + r.id);
+  assert.deepEqual(ds(2027), ['2027-01-01 newyear','2027-01-18 mlk','2027-02-15 presidents','2027-03-26 goodfriday','2027-05-31 memorial','2027-07-05 july4','2027-09-06 labor','2027-10-11 columbus','2027-11-02 election','2027-11-11 veterans','2027-11-25 thanksgiving','2027-11-26 dayafter','2027-12-24 christmas','2027-12-31 newyear']);
+});
+t('weekend observance can be turned off', () => {
+  const ds = C.ruleDates(['july4', 'christmas'], false, 2027).map((r) => C.toIso(r.dn));
+  assert.deepEqual(ds, ['2027-07-04', '2027-12-25']);
+});
+t('recurring holidays push dates in any year', () => {
+  const cal = C.makeCal({ name: 'r', workDays: [0,1,1,1,1,1,0], rules: ['mlk', 'election', 'veterans', 'columbus'] });
+  // Fri 2031-01-17 + 1 work day: Mon 20 is MLK Day, so it lands Tue 21
+  assert.equal(C.toIso(cal.add(C.toDn('2031-01-17'), 2) - 1), '2031-01-21');
+  assert(!cal.isWork(C.toDn('2030-11-05')) && !cal.isWork(C.toDn('2030-11-11')) && !cal.isWork(C.toDn('2030-10-14')));
+});
 console.log(n, 'tests passed');
