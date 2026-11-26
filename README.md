@@ -15,9 +15,12 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Automatic recalculation on every edit (no F9)
 
 **Interface**
-- Dark theme by default with a light theme toggle; IBM Plex Sans embedded so it works offline
+- **Design system:** graphite chrome, one cobalt accent, and color only where it means something (critical, warnings, OK). Every color, size, radius and shadow is a token, with light and dark designed together. See the [OpenTrak design system](https://claude.ai/artifact/1xezTxVZBu8Ld4E67crD4u)
+- **One command bar:** the project name with a status line under it (data date, Update progress, finish, baseline variance, schedule check, autosave), view controls (filter, activity list, Table/Split/Gantt, Day/Week/Month, a **Show** menu for logic, float and baseline bars plus the legend) and actions (undo, redo, print, **+ Activity** with Milestone and New project in its menu). On screens under 1600px wide the view controls sit in a slim second row
+- Graphite dark theme by default with a light theme toggle; IBM Plex Sans embedded so it works offline
 - Accessibility: WCAG 2.2 AA contrast in both themes (checked with axe-core), labeled controls, keyboard focus kept in dialogs, and a color-blind-safe bar preset
 - Activity table grouped by WBS, with inline editing (click a cell, then Enter or Tab)
+- **Fast entry:** every group ends with a ready-to-type **＋ Add activity** line. Type a name, optionally Tab to the duration (blank = 5 days, 0 = milestone) and predecessors (pre-filled with the activity above, so a sequence links itself), and press Enter. The next line is ready at once, and IDs continue the group's series (A2070 → A2080)
 - Gantt chart with critical path, progress, float, baselines and logic lines
 - Drag from a bar's end to another bar to link them, or drag a bar's edge to change its duration
 - Detail panel for dates, progress, constraints, predecessors and successors (with driving links marked) and notes
@@ -69,6 +72,7 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 | Key | Action |
 |---|---|
 | Insert or Ctrl+Enter | Add an activity after the selected one, linked to it |
+| Enter in the ＋ Add activity line | Add it and start the next one (Esc clears the line) |
 | ↑ / ↓ | Move the selection |
 | F2 | Rename the selected activity |
 | Delete | Delete the selected activity (Undo in the message brings it back) |
