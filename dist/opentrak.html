@@ -235,6 +235,24 @@ textarea.inp{height:auto;min-height:70px;padding:8px 9px;resize:vertical}
 .toast .tact{border:0;background:transparent;color:var(--accent-fg);font-weight:600;padding:2px 4px;border-radius:5px}
 .toast .tact:hover{background:var(--tint-accent)}
 .subline-bad{color:var(--bad)!important}
+.modal.pv{width:min(1500px,100%);height:94vh;max-height:94vh}
+.modal.pv .mb{padding:0;flex:1;min-height:0;overflow:hidden;display:flex}
+.pv-wrap{display:grid;grid-template-columns:300px 1fr;flex:1;min-height:0}
+.pv-side{overflow:auto;padding:12px 16px;border-right:1px solid var(--line)}
+.pv-sec{padding:10px 0 12px;border-bottom:1px solid var(--line-2)} .pv-sec:last-child{border-bottom:0}
+.pv-sec h4{margin:0 0 8px;font-size:12.5px;font-weight:600;display:inline-flex;gap:6px;align-items:baseline}
+.pv-sec summary{cursor:pointer;list-style-position:outside;margin-left:14px} .pv-sec summary h4{margin:0}
+.pv-sec .f{margin-bottom:8px}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;font-size:12px;color:var(--muted)}
+.pv-chk{display:flex;padding:3px 0;color:var(--text);font-size:12.5px}
+.pv-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 8px;margin:8px 0 6px}
+.pv-main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
+.pv-bar{display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.pv-pages{flex:1;overflow:auto;padding:20px 24px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.pv-fig{margin:0 0 14px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.pv-page{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.18);flex:none}
+.pv-fig figcaption{font-size:11.5px;color:var(--muted)}
+@media (max-width:820px){.modal.pv .pg-prev{display:none}.pv-wrap{grid-template-columns:1fr;grid-template-rows:auto 1fr}.pv-side{max-height:40vh;border-right:0;border-bottom:1px solid var(--line)}}
 .modal.cmdk{width:min(600px,100%);align-self:flex-start;margin-top:10vh}
 .modal.cmdk .mh{display:none}
 .modal.cmdk .mb{padding:10px}
@@ -353,7 +371,7 @@ input[type=color]{background:var(--field)!important}
         <button class="btn ghost icon" id="bRedo" title="Redo (Ctrl+Y)" aria-label="Redo"><svg class="i" viewBox="0 0 16 16"><path d="M10.5 4l3 3-3 3M13.5 7H6a3.5 3.5 0 0 0 0 7h3"/></svg></button>
         <button class="btn sky" id="bAi" hidden aria-expanded="false" title="Schedule assistant"><svg class="i" viewBox="0 0 16 16"><path d="M8 2l1.3 3.4L12.7 7 9.3 8.3 8 11.7 6.7 8.3 3.3 7l3.4-1.6z"/><path d="M12.5 10.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></svg><span class="hide-m lbl-lg">Assistant</span></button>
         <button class="btn okc" id="bCheck" title="Schedule check"><svg class="i" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M5.4 8.2l1.8 1.8 3.4-3.7"/></svg><span class="hide-m">Check</span><span id="chkBadge" class="badge"><span>0</span></span></button>
-        <button class="btn slate" id="bPrint" title="Print / PDF (Ctrl+P)"><svg class="i" viewBox="0 0 16 16"><path d="M4.5 6V2.5h7V6"/><rect x="2.5" y="6" width="11" height="5.5" rx="1.3"/><path d="M4.5 9.5h7v4h-7z"/></svg><span class="hide-m lbl-lg">Print / PDF</span></button>
+        <button class="btn slate" id="bPrint" title="Print preview / PDF (Ctrl+P)"><svg class="i" viewBox="0 0 16 16"><path d="M4.5 6V2.5h7V6"/><rect x="2.5" y="6" width="11" height="5.5" rx="1.3"/><path d="M4.5 9.5h7v4h-7z"/></svg><span class="hide-m lbl-lg">Print / PDF</span></button>
         <button class="btn violet" id="bAddMs" title="Add milestone"><svg class="i" viewBox="0 0 16 16"><path d="M8 2.5l5.5 5.5L8 13.5 2.5 8z"/></svg><span class="hide-m lbl-lg">Milestone</span></button>
         <button class="btn pri" id="bAdd" title="Add activity (Insert)"><svg class="i" viewBox="0 0 16 16" style="stroke-width:2"><path d="M8 3v10M3 8h10"/></svg>Activity</button>
       </div>
@@ -1271,7 +1289,9 @@ function sanitizeLayout(o) {
   for (const k of Object.keys(COLREG)) if (!seen.has(k)) cols.push({ k, w: COLREG[k].w, show: false });
   if (!cols.some((c) => c.show)) cols.find((c) => c.k === 'name').show = true;
   const p = o.print && typeof o.print === 'object' ? o.print : null;
-  const print = p ? { paper: str(p.paper, 12), orient: str(p.orient, 12), scope: str(p.scope, 6), density: str(p.density, 10), links: p.links == null ? true : !!p.links, footer: p.footer == null ? true : !!p.footer, company: str(p.company, 80), title: str(p.title, 120), from: dt(p.from), to: dt(p.to) } : {};
+  const ob = (v) => (v == null ? null : !!v);
+  const print = p ? { paper: str(p.paper, 12), orient: str(p.orient, 12), scope: str(p.scope, 6), density: str(p.density, 10), links: p.links == null ? true : !!p.links, footer: p.footer == null ? true : !!p.footer, company: str(p.company, 80), title: str(p.title, 120), rev: str(p.rev, 80), from: dt(p.from), to: dt(p.to),
+    cols: Array.isArray(p.cols) ? [...new Set(p.cols.filter((k) => COLREG[k]))].slice(0, 30) : null, bl: ob(p.bl), float: ob(p.float), prog: ob(p.prog), groups: ob(p.groups), nonwork: ob(p.nonwork), ddline: ob(p.ddline), label: LABELS[p.label] ? p.label : null } : {};
   return { preset: PRESETS[o.preset] ? o.preset : 'custom', rowH: int(o.rowH, 20, 48, 28), fontSize: int(o.fontSize, 10, 16, 12), links: o.links == null ? true : !!o.links, bars: out, cols, print };
 }
 
@@ -1951,7 +1971,7 @@ function select(id, scroll) {
 let modalReturn = null;
 function modal(title, body, foot) {
   if (!$('#ov').classList.contains('open')) modalReturn = document.activeElement;
-  $('#mTitle').textContent = title; $('#mBody').innerHTML = body; $('#mFoot').innerHTML = foot === null ? '' : foot || '<button class="btn pri" data-close>Done</button>'; $('#mFoot').hidden = foot === null; $('.modal').classList.remove('cmdk');
+  $('#mTitle').textContent = title; $('#mBody').innerHTML = body; $('#mFoot').innerHTML = foot === null ? '' : foot || '<button class="btn pri" data-close>Done</button>'; $('#mFoot').hidden = foot === null; $('.modal').classList.remove('cmdk', 'pv');
   $('.modal').setAttribute('aria-labelledby', 'mTitle');
   $('#ov').classList.add('open');
   setTimeout(() => { const f = $('.modal .mb').querySelector('input:not([type=hidden]):not([disabled]),select,textarea,button:not([disabled])') || $('#mFoot .btn.pri') || $('#mClose'); if (f) f.focus(); }, 0);
@@ -1964,7 +1984,7 @@ document.addEventListener('keydown', (e) => {
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   else if (!$('.modal').contains(document.activeElement)) { e.preventDefault(); first.focus(); }
 });
-function closeModal() { $('.modal').style.width = ''; $('.modal').classList.remove('cmdk'); $('#mFoot').hidden = false; $('.modal').classList.remove('cmdk'); $('#mFoot').hidden = false; $('#ov').classList.remove('open'); $('#mBody').innerHTML = ''; modalHandler = null; if (modalReturn && document.contains(modalReturn)) { try { modalReturn.focus(); } catch (e) { /* ignore */ } } modalReturn = null; }
+function closeModal() { $('.modal').style.width = ''; $('.modal').classList.remove('cmdk', 'pv'); $('#mFoot').hidden = false; $('.modal').classList.remove('cmdk'); $('#mFoot').hidden = false; $('#ov').classList.remove('open'); $('#mBody').innerHTML = ''; modalHandler = null; if (modalReturn && document.contains(modalReturn)) { try { modalReturn.focus(); } catch (e) { /* ignore */ } } modalReturn = null; }
 let modalHandler = null;
 function confirmBox(title, text, okLabel, fn) {
   modal(title, '<p style="margin:0;line-height:1.5">' + esc(text) + '</p>', '<button class="btn" data-close>Cancel</button><button class="btn pri" id="cOk">' + esc(okLabel) + '</button>');
@@ -1987,7 +2007,7 @@ const KEYS = [
   ['Ctrl+K', 'Go to anything: any command or activity'],
   ['/', 'Filter the activity list'],
   ['Ctrl+S', 'Save the project file'],
-  ['Ctrl+P', 'Print / PDF'],
+  ['Ctrl+P', 'Print preview / PDF'],
   ['Esc', 'Cancel an edit, close the panel or dialog'],
   ['?', 'Show this list'],
 ];
@@ -2102,7 +2122,7 @@ function commands() {
     C('Format bars', showBars, 'colors gantt style preset row height text size'),
     C('Columns', showColumns, 'fields show hide table'),
     C('Spelling', showSpelling, 'spell check dictionary typos'),
-    C('Print / PDF', showPrint, 'export paper tabloid', 'Ctrl+P'),
+    C('Print preview / PDF', showPrint, 'print export paper tabloid columns page', 'Ctrl+P'),
     C('Save project file', () => saveFile(fileName('json'), JSON.stringify(P, null, 1)), 'download json', 'Ctrl+S'),
     C('Open project file', () => $('#fileIn').click(), 'load import json'),
     C('Export to Excel (CSV)', () => saveFile(fileName('csv'), toCsv()), 'csv spreadsheet download'),
@@ -2403,14 +2423,27 @@ const PAPER = { letter: ['Letter 8½×11', 612, 792], legal: ['Legal 8½×14', 6
 const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
 function printOpts() {
   const o = (P.layout && P.layout.print) || {};
-  return { dest: 'pdf', paper: PAPER[o.paper] ? o.paper : 'tabloid', orient: o.orient === 'portrait' ? 'portrait' : 'landscape', scope: o.scope === 'all' ? 'all' : 'view',
-    density: ['compact', 'normal', 'roomy'].includes(o.density) ? o.density : 'normal', links: o.links == null ? true : !!o.links, footer: o.footer == null ? true : !!o.footer,
-    company: str(o.company, 80), title: str(o.title, 120), from: dt(o.from), to: dt(o.to) };
+  const B = P.layout.bars, def = (v, d) => (v == null ? d : !!v);
+  return { paper: PAPER[o.paper] ? o.paper : 'tabloid', orient: o.orient === 'portrait' ? 'portrait' : 'landscape', scope: ['all', 'view', 'crit', 'open'].includes(o.scope) ? o.scope : 'view',
+    density: ['compact', 'normal', 'roomy'].includes(o.density) ? o.density : 'normal', links: o.links == null ? P.layout.links : !!o.links, footer: o.footer == null ? true : !!o.footer,
+    company: str(o.company, 80), title: str(o.title, 120), rev: str(o.rev, 80), from: dt(o.from), to: dt(o.to),
+    cols: Array.isArray(o.cols) && o.cols.length ? o.cols.filter((k) => COLREG[k]) : null,
+    bl: def(o.bl, B.target.show), float: def(o.float, B.float.show), prog: def(o.prog, B.progress.show), groups: def(o.groups, true), nonwork: def(o.nonwork, true), ddline: def(o.ddline, true),
+    label: LABELS[o.label] ? o.label : B.labelR };
 }
-function rowsFor(scope) {
-  if (scope === 'view') return buildRows();
-  const keep = { f: ui.filter, q: ui.q, c: new Set(ui.collapsed) }; ui.filter = 'all'; ui.q = ''; ui.collapsed.clear();
-  const r = buildRows(); ui.filter = keep.f; ui.q = keep.q; ui.collapsed = keep.c; return r;
+function rowsFor(scope, groups = true) {
+  let r;
+  if (scope === 'view') r = buildRows();
+  else {
+    const keep = { f: ui.filter, q: ui.q, c: new Set(ui.collapsed) }; ui.filter = scope === 'crit' ? 'crit' : scope === 'open' ? 'open' : 'all'; ui.q = ''; ui.collapsed.clear();
+    r = buildRows(); ui.filter = keep.f; ui.q = keep.q; ui.collapsed = keep.c;
+  }
+  return groups ? r : r.filter((x) => !x.g);
+}
+// columns the printout uses: the print selection if one was made, else the screen's
+function printCols(o) {
+  const w = (k) => (P.layout.cols.find((c) => c.k === k) || { w: COLREG[k].w }).w;
+  return (o.cols ? o.cols.map((k) => ({ ...COLREG[k], k, w: w(k) })) : cols()).filter((c) => c.k !== 'var' || P.baseline);
 }
 function pdfGeom(o, nRows) {
   const [, pw, ph] = PAPER[o.paper]; const W = o.orient === 'landscape' ? Math.max(pw, ph) : Math.min(pw, ph), H = o.orient === 'landscape' ? Math.min(pw, ph) : Math.max(pw, ph);
@@ -2420,23 +2453,58 @@ function pdfGeom(o, nRows) {
 }
 function hexRgb(h) { const n = parseInt(String(h).slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 
-function buildPdf(o) {
+function previewDoc(W, H) {
   const { jsPDF } = window.jspdf;
-  const rws = rowsFor(o.scope);
+  const m = new jsPDF({ unit: 'pt', format: [Math.min(W, H), Math.max(W, H)], orientation: W > H ? 'landscape' : 'portrait' }); // text measuring only
+  const pages = [[]]; let cur = pages[0];
+  const d = { pages, W, H, setProperties() {}, addPage() { cur = []; pages.push(cur); },
+    setFont(f, st) { m.setFont(f, st); cur.push(['setFont', [f, st]]); }, setFontSize(z) { m.setFontSize(z); cur.push(['setFontSize', [z]]); },
+    getTextWidth: (t) => m.getTextWidth(t), splitTextToSize: (t, w) => m.splitTextToSize(t, w) };
+  for (const n of ['setFillColor', 'setDrawColor', 'setTextColor', 'text', 'rect', 'roundedRect', 'line', 'lines', 'triangle', 'circle', 'setLineWidth', 'setLineDashPattern']) d[n] = (...a) => { cur.push([n, a]); };
+  return d;
+}
+function paintPage(ctx, ops) {
+  const st = { bold: false, size: 10, fill: '#000', draw: '#000', text: '#000' };
+  const rgb = (a) => (typeof a[0] === 'string' ? a[0] : 'rgb(' + a[0] + ',' + a[1] + ',' + a[2] + ')');
+  const font = () => { ctx.font = (st.bold ? 'bold ' : '') + st.size + 'px Helvetica, Arial, sans-serif'; };
+  const paint = (style) => { if (!style || /D|S/.test(style)) { ctx.strokeStyle = st.draw; ctx.stroke(); } if (style && /F/.test(style)) { ctx.fillStyle = st.fill; ctx.fill(); } };
+  ctx.lineWidth = 0.2; ctx.lineCap = 'butt'; ctx.textBaseline = 'alphabetic'; font();
+  for (const [n, a] of ops) {
+    switch (n) {
+      case 'setFont': st.bold = /bold/.test(a[1] || ''); font(); break;
+      case 'setFontSize': st.size = a[0]; font(); break;
+      case 'setFillColor': st.fill = rgb(a); break; case 'setDrawColor': st.draw = rgb(a); break; case 'setTextColor': st.text = rgb(a); break;
+      case 'setLineWidth': ctx.lineWidth = a[0]; break; case 'setLineDashPattern': ctx.setLineDash(a[0] || []); break;
+      case 'text': { ctx.fillStyle = st.text; ctx.textAlign = a[3] && a[3].align === 'right' ? 'right' : 'left'; const ls = Array.isArray(a[0]) ? a[0] : [a[0]]; ls.forEach((t, i) => ctx.fillText(String(t), a[1], a[2] + i * st.size * 1.15)); break; }
+      case 'rect': ctx.beginPath(); ctx.rect(a[0], a[1], a[2], a[3]); paint(a[4]); break;
+      case 'roundedRect': ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(a[0], a[1], a[2], a[3], a[4]); else ctx.rect(a[0], a[1], a[2], a[3]); paint(a[6]); break;
+      case 'line': ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(a[2], a[3]); ctx.strokeStyle = st.draw; ctx.stroke(); break;
+      case 'lines': { ctx.beginPath(); let x = a[1], y = a[2]; ctx.moveTo(x, y); for (const [dx, dy] of a[0]) { x += dx; y += dy; ctx.lineTo(x, y); } ctx.strokeStyle = st.draw; ctx.stroke(); break; }
+      case 'triangle': ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(a[2], a[3]); ctx.lineTo(a[4], a[5]); ctx.closePath(); paint(a[6]); break;
+      case 'circle': ctx.beginPath(); ctx.arc(a[0], a[1], a[2], 0, Math.PI * 2); paint(a[3]); break;
+    }
+  }
+}
+
+// o = print options; mk (optional) makes the drawing target, used for the on-screen preview
+function buildPdf(o, mk) {
+  const { jsPDF } = window.jspdf;
+  const rws = rowsFor(o.scope, o.groups);
   const G = pdfGeom(o, rws.length);
   const { W, H, M, TH, rh, y0, y1, rpp } = G;
-  const doc = new jsPDF({ orientation: o.orient, unit: 'pt', format: [Math.min(W, H), Math.max(W, H)], compress: true });
+  const doc = mk ? mk(W, H) : new jsPDF({ orientation: o.orient, unit: 'pt', format: [Math.min(W, H), Math.max(W, H)], compress: true });
   doc.setProperties({ title: (o.title || P.name) + ' — schedule', creator: 'OpenTrak' });
-  const B = P.layout.bars, fsz = { compact: 6.3, normal: 7.2, roomy: 8.2 }[o.density];
+  const B = JSON.parse(JSON.stringify(P.layout.bars)); B.target.show = !!o.bl; B.float.show = !!o.float; B.progress.show = !!o.prog; B.labelR = o.label;
+  const fsz = { compact: 6.3, normal: 7.2, roomy: 8.2 }[o.density];
   const fill = (h) => doc.setFillColor(...hexRgb(h)), stroke = (h) => doc.setDrawColor(...hexRgb(h)), ink = (h) => doc.setTextColor(...hexRgb(h));
   const fit = (s, w) => { s = String(s ?? ''); if (doc.getTextWidth(s) <= w) return s; while (s.length > 1 && doc.getTextWidth(s + '…') > w) s = s.slice(0, -1); return s + '…'; };
   // columns: current layout, scaled to at most ~46% of the page
   // drop lower-priority columns on narrow paper so the rest stay readable
-  let cs = cols().filter((c) => c.k !== 'var' || P.baseline);
+  let cs = printCols(o);
   const keepOrder = ['name', 'code', 'start', 'finish', 'tf', 'od', 'pct', 'rd', 'var'];
   const prio = (c) => { const i = keepOrder.indexOf(c.k); return i < 0 ? 99 : i; };
-  const maxT = (W - 2 * M) * 0.46;
-  while (cs.length > 2 && cs.reduce((s, c) => s + c.w, 0) * 0.6 > maxT * 1.25) { const worst = cs.reduce((w, c) => (prio(c) > prio(w) ? c : w), cs[0]); if (prio(worst) < 2) break; cs = cs.filter((c) => c !== worst); }
+  const maxT = (W - 2 * M) * (o.cols ? 0.6 : 0.46); // columns picked for print are all kept; they just get narrower
+  while (!o.cols && cs.length > 2 && cs.reduce((s, c) => s + c.w, 0) * 0.6 > maxT * 1.25) { const worst = cs.reduce((w, c) => (prio(c) > prio(w) ? c : w), cs[0]); if (prio(worst) < 2) break; cs = cs.filter((c) => c !== worst); }
   const sumW = cs.reduce((s, c) => s + c.w, 0); const tableW = Math.min(sumW * 0.6, maxT); const k = tableW / sumW;
   const gx0 = M + tableW, gW = W - M - gx0;
   // time range
@@ -2458,6 +2526,7 @@ function buildPdf(o) {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ink('#333333');
     doc.text('Data date ' + fmt(P.dataDate) + '    Start ' + fmt(S.start) + '    Finish ' + fmt(S.finish) + (o.company ? '    ' + o.company : ''), M, M + 25);
     doc.text('Printed ' + printed + '    Page ' + (pg + 1) + ' of ' + G.pages, W - M, M + 12, { align: 'right' });
+    if (o.rev) { doc.setFont('helvetica', 'bold'); doc.text(fit(o.rev, W * 0.35), W - M, M + 25, { align: 'right' }); doc.setFont('helvetica', 'normal'); }
     // frame
     doc.setLineWidth(0.6); stroke('#000000'); doc.rect(M, y0, W - 2 * M, y1 - y0);
     // timescale
@@ -2465,7 +2534,7 @@ function buildPdf(o) {
     doc.setLineWidth(0.3); stroke('#9a9a9a');
     const bodyTop = y0 + TH, bodyBot = Math.min(y1, bodyTop + pr.length * rh);
     // non-work shading
-    if (ppd >= 1.6) { doc.setFillColor(242, 242, 242); for (let d = lo; d < hi; d++) if (!defCal.isWork(d)) doc.rect(X(d), bodyTop, ppd, y1 - bodyTop, 'F'); }
+    if (o.nonwork && ppd >= 1.6) { doc.setFillColor(242, 242, 242); for (let d = lo; d < hi; d++) if (!defCal.isWork(d)) doc.rect(X(d), bodyTop, ppd, y1 - bodyTop, 'F'); }
     // tiers
     doc.setFontSize(6.5); ink('#000000');
     let d = lo;
@@ -2569,19 +2638,19 @@ function buildPdf(o) {
     });
     // data date
     const ddp = CPM.toDn(P.dataDate);
-    if (inR(ddp)) { doc.setDrawColor(14, 116, 200); doc.setLineWidth(0.8); doc.setLineDashPattern([3, 2], 0); doc.line(X(ddp), bodyTop, X(ddp), y1); doc.setLineDashPattern([], 0); doc.setLineWidth(0.3); }
+    if (o.ddline && inR(ddp)) { doc.setDrawColor(14, 116, 200); doc.setLineWidth(0.8); doc.setLineDashPattern([3, 2], 0); doc.line(X(ddp), bodyTop, X(ddp), y1); doc.setLineDashPattern([], 0); doc.setLineWidth(0.3); }
     // footer: legend + title block
     if (o.footer) {
       const fy = y1 + 6, fh = G.FOOT - 10; doc.setLineWidth(0.6); stroke('#000000'); doc.rect(M, fy, W - 2 * M, fh);
       doc.setFontSize(6.8); doc.setFont('helvetica', 'normal'); ink('#000000');
-      const leg = [['Non-critical', B.remaining.color, 'bar'], ['Critical', B.critical.color, 'bar'], ['Progress', B.progress.color, 'bar'], ['Target', B.target.color, 'thin'], ['Milestone', B.milestone.color, 'ms']];
+      const leg = [['Non-critical', B.remaining.color, 'bar'], ['Critical', B.critical.color, 'bar'], ...(B.progress.show ? [['Progress', B.progress.color, 'bar']] : []), ...(B.target.show && P.baseline ? [['Baseline', B.target.color, 'thin']] : []), ['Milestone', B.milestone.color, 'ms']];
       let lx = M + 8;
       leg.forEach(([name, c, kind], i) => {
         const ly = fy + 10 + (i % 3) * 12; if (i === 3) lx = M + 110;
         fill(c); if (kind === 'ms') { doc.triangle(lx + 6, ly - 4, lx + 10, ly, lx + 6, ly + 4, 'F'); doc.triangle(lx + 6, ly - 4, lx + 2, ly, lx + 6, ly + 4, 'F'); } else doc.rect(lx, ly - (kind === 'thin' ? 1 : 3), 18, kind === 'thin' ? 2 : 6, 'F');
         doc.text(name, lx + 24, ly + 2.3);
       });
-      doc.setDrawColor(14, 116, 200); doc.setLineDashPattern([3, 2], 0); doc.line(M + 110, fy + 34 - 3, M + 128, fy + 34 - 3); doc.setLineDashPattern([], 0); doc.text('Data date', M + 134, fy + 34); stroke('#000000');
+      if (o.ddline) { const dx = M + 110, dy = fy + 10 + (leg.length - 3) * 12; /* next free legend slot, second column */ doc.setDrawColor(14, 116, 200); doc.setLineDashPattern([3, 2], 0); doc.line(dx, dy - 3, dx + 18, dy - 3); doc.setLineDashPattern([], 0); doc.text('Data date', dx + 24, dy); } stroke('#000000');
       const tbx = W - M - 250; doc.line(tbx, fy, tbx, fy + fh);
       doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.text(fit(o.company || 'OpenTrak', 236), tbx + 7, fy + 12);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.text(fit(P.name, 236), tbx + 7, fy + 23);
@@ -2592,47 +2661,96 @@ function buildPdf(o) {
   return { doc, pages: G.pages };
 }
 
+// Print preview: options on the left, the real pages on the right (drawn by the same code as the PDF)
 function showPrint() {
-  const o = printOpts();
-  const draw = () => {
-    const n = rowsFor(o.scope).length; const G = pdfGeom(o, n);
-    $('#mBody').innerHTML = '<div class="fg">'
-      + '<label class="f full">Destination<select class="sel" data-p="dest"><option value="pdf"' + (o.dest === 'pdf' ? ' selected' : '') + '>Save as PDF</option><option value="printer"' + (o.dest === 'printer' ? ' selected' : '') + (inFrame ? ' disabled' : '') + '>Printer' + (inFrame ? ' (available in the desktop app)' : '') + '</option></select></label>'
-      + '<label class="f">Paper size<select class="sel" data-p="paper">' + Object.entries(PAPER).map(([k2, [l]]) => '<option value="' + k2 + '"' + (o.paper === k2 ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
-      + '<label class="f">Orientation<select class="sel" data-p="orient"><option value="landscape"' + (o.orient === 'landscape' ? ' selected' : '') + '>Landscape</option><option value="portrait"' + (o.orient === 'portrait' ? ' selected' : '') + '>Portrait</option></select></label>'
-      + '<label class="f">Activities<select class="sel" data-p="scope"><option value="view"' + (o.scope === 'view' ? ' selected' : '') + '>As shown (current filter & groups)</option><option value="all"' + (o.scope === 'all' ? ' selected' : '') + '>All activities</option></select></label>'
-      + '<label class="f">Row spacing<select class="sel" data-p="density">' + ['compact', 'normal', 'roomy'].map((x) => '<option value="' + x + '"' + (o.density === x ? ' selected' : '') + '>' + x[0].toUpperCase() + x.slice(1) + '</option>').join('') + '</select></label>'
-      + '<label class="f">Timescale from (optional)<input class="inp" type="date" data-p="from" value="' + o.from + '"></label>'
-      + '<label class="f">Timescale to (optional)<input class="inp" type="date" data-p="to" value="' + o.to + '"></label>'
-      + '<label class="f full">Title<input class="inp" data-p="title" maxlength="120" placeholder="' + esc(P.name) + '" value="' + esc(o.title) + '"></label>'
-      + '<label class="f full">Company / prepared by (title block)<input class="inp" data-p="company" maxlength="80" placeholder="e.g. Centennial Elevator — Steven Lindgren, PM" value="' + esc(o.company) + '"></label>'
-      + '<label class="chk"><input type="checkbox" data-p="links"' + (o.links ? ' checked' : '') + '> Logic lines</label>'
-      + '<label class="chk"><input type="checkbox" data-p="footer"' + (o.footer ? ' checked' : '') + '> Legend & title block</label>'
-      + '</div><p class="hint" style="margin-top:12px">' + n + ' rows → <b>' + G.pages + ' page' + (G.pages > 1 ? 's' : '') + '</b>. Columns, colors and bar styles follow your Columns and Format bars settings. The timeline fits the page width.</p>';
+  const o = printOpts(); let zoom = 'width', timer = null, last = null;
+  const sel = (k, opts, aria) => '<select class="sel" data-p="' + k + '"' + (aria ? ' aria-label="' + aria + '"' : '') + '>' + opts.map(([v, l]) => '<option value="' + v + '"' + (String(o[k]) === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>';
+  const seg = (k, opts, label) => '<div class="seg" role="group" aria-label="' + label + '">' + opts.map(([v, l]) => '<button type="button" data-pseg="' + k + '" data-v="' + v + '" class="' + (o[k] === v ? 'on' : '') + '" aria-pressed="' + (o[k] === v) + '">' + l + '</button>').join('') + '</div>';
+  const chk = (k, l, dis, hint) => '<label class="chk pv-chk"><input type="checkbox" data-p="' + k + '"' + (o[k] && !dis ? ' checked' : '') + (dis ? ' disabled' : '') + '> ' + l + (hint ? ' <span class="hint" style="margin:0">' + hint + '</span>' : '') + '</label>';
+  const colKeys = () => printCols(o).map((c) => c.k);
+  const side = () => {
+    const on = new Set(colKeys());
+    return '<div class="pv-sec"><h4>Page</h4><label class="f">Paper' + sel('paper', Object.entries(PAPER).map(([k2, [l]]) => [k2, l])) + '</label>'
+      + '<div class="pv-row"><span>Orientation</span>' + seg('orient', [['landscape', 'Landscape'], ['portrait', 'Portrait']], 'Orientation') + '</div>'
+      + '<div class="pv-row"><span>Rows</span>' + seg('density', [['compact', 'Compact'], ['normal', 'Normal'], ['roomy', 'Roomy']], 'Row spacing') + '</div></div>'
+      + '<div class="pv-sec"><h4>Activities</h4>' + sel('scope', [['all', 'All activities'], ['view', 'As shown on screen (filter & collapsed groups)'], ['crit', 'Critical activities only'], ['open', 'Not yet complete']], 'Which activities to print')
+      + chk('groups', 'WBS group rows') + '</div>'
+      + '<div class="pv-sec"><h4>Show on the chart</h4>' + chk('links', 'Logic lines') + chk('bl', 'Baseline bars', !P.baseline, P.baseline ? '' : '(no baseline saved)') + chk('prog', 'Progress bars') + chk('float', 'Float bars')
+      + chk('nonwork', 'Shade non-work days') + chk('ddline', 'Data date line') + chk('footer', 'Legend & title block')
+      + '<label class="f" style="margin-top:8px">Label beside bars' + sel('label', Object.entries(LABELS)) + '</label></div>'
+      + '<details class="pv-sec"' + (o.cols ? ' open' : '') + '><summary><h4>Columns <span class="hint" style="margin:0">(' + on.size + ')</span></h4></summary>'
+      + '<div class="pv-cols">' + P.layout.cols.filter((c) => c.k !== 'var' || P.baseline).map((c) => '<label class="chk pv-chk"><input type="checkbox" data-pcol="' + c.k + '"' + (on.has(c.k) ? ' checked' : '') + '> ' + esc(COLREG[c.k].l) + '</label>').join('') + '</div>'
+      + (o.cols ? '<button class="btn sm ghost" id="pvColsReset">Use the screen’s columns</button>' : '<p class="hint" style="margin:4px 0 0">Using the same columns as the screen. Tick or untick to choose different ones for printing.</p>') + '</details>'
+      + '<details class="pv-sec"' + (o.from || o.to ? ' open' : '') + '><summary><h4>Timescale</h4></summary><div class="fg"><label class="f">From<input class="inp" type="date" data-p="from" value="' + o.from + '"></label><label class="f">To<input class="inp" type="date" data-p="to" value="' + o.to + '"></label></div>'
+      + '<p class="hint" style="margin:4px 0 0">Leave blank to fit the whole schedule across the page.</p></details>'
+      + '<div class="pv-sec"><h4>Title block</h4><label class="f">Title<input class="inp" data-p="title" data-live maxlength="120" placeholder="' + esc(P.name) + '" value="' + esc(o.title) + '"></label>'
+      + '<label class="f">Company / prepared by<input class="inp" data-p="company" data-live maxlength="80" placeholder="e.g. Centennial Elevator — Steven Lindgren, PM" value="' + esc(o.company) + '"></label>'
+      + '<label class="f">Revision / note<input class="inp" data-p="rev" data-live maxlength="80" placeholder="e.g. Rev 2 — overtime option" value="' + esc(o.rev) + '"></label></div>';
   };
-  modal('Print / PDF', '', '<button class="btn" data-close>Cancel</button><button class="btn pri" id="pGo">' + (o.dest === 'printer' ? 'Print' : 'Save PDF') + '</button>'); draw();
+  const save = () => { P.layout.print = { paper: o.paper, orient: o.orient, scope: o.scope, density: o.density, links: o.links, footer: o.footer, company: o.company, title: o.title, rev: o.rev, from: o.from, to: o.to, cols: o.cols, bl: o.bl, float: o.float, prog: o.prog, groups: o.groups, nonwork: o.nonwork, ddline: o.ddline, label: o.label }; persist(); };
+  const bad = () => (o.from && o.to && o.to <= o.from ? '“To” must be after “From”' : '');
+  const paint = () => {
+    const box = $('#pvPages'); if (!box) return;
+    const err = bad(); $$('#pvSave,#pvPrint').forEach((b) => { b.disabled = !!err; });
+    if (err) { $('#pvInfo').innerHTML = '<span class="neg">' + esc(err) + '</span>'; return; }
+    let built; try { built = buildPdf(o, previewDoc); } catch (e) { $('#pvInfo').innerHTML = '<span class="neg">Could not draw the preview: ' + esc(e.message) + '</span>'; return; }
+    const d = built.doc, n = d.pages.length, show = Math.min(n, 40);
+    const cw = box.clientWidth - 48, ch = box.clientHeight - 64;
+    const scale = zoom === 'page' ? Math.min(cw / d.W, ch / d.H) : zoom === 'width' ? cw / d.W : 96 / 72;
+    const dpr = Math.min(3, window.devicePixelRatio || 1) * (zoom === '100' ? 1 : 1.25);
+    box.innerHTML = '';
+    for (let i = 0; i < show; i++) {
+      const c = document.createElement('canvas'); c.className = 'pv-page'; c.setAttribute('role', 'img'); c.setAttribute('aria-label', 'Preview of page ' + (i + 1) + ' of ' + n);
+      c.style.width = Math.round(d.W * scale) + 'px'; c.style.height = Math.round(d.H * scale) + 'px';
+      c.width = Math.round(d.W * scale * dpr); c.height = Math.round(d.H * scale * dpr);
+      const ctx = c.getContext('2d'); ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, d.W, d.H); paintPage(ctx, d.pages[i]);
+      const fig = document.createElement('figure'); fig.className = 'pv-fig'; fig.appendChild(c);
+      const cap = document.createElement('figcaption'); cap.textContent = 'Page ' + (i + 1) + ' of ' + n; fig.appendChild(cap); box.appendChild(fig);
+    }
+    if (n > show) { const p2 = document.createElement('p'); p2.className = 'hint'; p2.textContent = 'Showing the first ' + show + ' of ' + n + ' pages.'; box.appendChild(p2); }
+    const rowsN = rowsFor(o.scope, o.groups).filter((r) => r.a).length;
+    $('#pvInfo').textContent = n + ' page' + (n > 1 ? 's' : '') + ' · ' + PAPER[o.paper][0] + ' ' + o.orient + ' · ' + rowsN + ' activit' + (rowsN === 1 ? 'y' : 'ies');
+    last = built;
+  };
+  const later = () => { clearTimeout(timer); timer = setTimeout(() => { save(); paint(); }, 120); };
+  const redrawSide = () => { const sc = $('#pvSide').scrollTop; $('#pvSide').innerHTML = side(); $('#pvSide').scrollTop = sc; };
+  modal('Print preview', '<div class="pv-wrap"><aside class="pv-side" id="pvSide" aria-label="Print options">' + side() + '</aside>'
+    + '<section class="pv-main" aria-label="Preview"><div class="pv-bar">' + '<div class="seg" role="group" aria-label="Zoom"><button type="button" data-zoom="page">Whole page</button><button type="button" data-zoom="width" class="on">Fit width</button><button type="button" data-zoom="100">100%</button></div>'
+    + '<span class="hint hide-m" style="margin:0">Exactly what will print. Colors and bar styles come from Format bars.</span></div><div class="pv-pages" id="pvPages" tabindex="0" aria-label="Page preview"></div></section></div>',
+    '<span id="pvInfo" class="pg-prev"></span><button class="btn" data-close>Cancel</button>' + (inFrame ? '' : '<button class="btn" id="pvPrint">Print…</button>') + '<button class="btn pri" id="pvSave">Save PDF</button>');
+  $('.modal').classList.add('pv');
+  setTimeout(paint, 0);
+  const onResize = () => { if (!$('.modal').classList.contains('pv')) { window.removeEventListener('resize', onResize); return; } later(); };
+  window.addEventListener('resize', onResize);
+  $('#pvSide').addEventListener('input', (e) => { if (e.target.dataset.live != null) { o[e.target.dataset.p] = e.target.value; later(); } });
   modalHandler = async (e) => {
     const t = e.target;
+    const zb = t.closest('[data-zoom]'); if (e.type === 'click' && zb) { zoom = zb.dataset.zoom; $$('[data-zoom]').forEach((b) => b.classList.toggle('on', b === zb)); paint(); return; }
+    const sb = t.closest('[data-pseg]'); if (e.type === 'click' && sb) { o[sb.dataset.pseg] = sb.dataset.v; redrawSide(); later(); return; }
+    if (e.type === 'click' && t.id === 'pvColsReset') { o.cols = null; redrawSide(); later(); return; }
+    if (e.type === 'change' && t.dataset.pcol) {
+      const on = new Set(colKeys()); if (t.checked) on.add(t.dataset.pcol); else on.delete(t.dataset.pcol);
+      if (!on.size) { t.checked = true; toast('Keep at least one column'); return; }
+      o.cols = P.layout.cols.map((c) => c.k).filter((k) => on.has(k)); redrawSide(); later(); return;
+    }
     if (e.type === 'change' && t.dataset.p) {
       const f = t.dataset.p; o[f] = t.type === 'checkbox' ? t.checked : t.value;
       if (f === 'from' || f === 'to') o[f] = dt(t.value);
-      $('#pGo').textContent = o.dest === 'printer' ? 'Print' : 'Save PDF'; draw(); return;
+      if (t.type !== 'text' && !t.dataset.live) redrawSide(); later(); return;
     }
-    if (e.type === 'click' && t.id === 'pGo') {
-      if (o.from && o.to && o.to <= o.from) { toast('“To” must be after “From”'); return; }
-      // remember settings with the project (not undoable noise)
-      P.layout.print = { paper: o.paper, orient: o.orient, scope: o.scope, density: o.density, links: o.links, footer: o.footer, company: o.company, title: o.title, from: o.from, to: o.to }; persist();
-      t.disabled = true; t.textContent = 'Building…';
+    if (e.type === 'click' && (t.id === 'pvSave' || t.id === 'pvPrint')) {
+      if (bad()) return; save();
+      const toPrinter = t.id === 'pvPrint'; t.disabled = true; const lbl = t.textContent; t.textContent = 'Building…';
       await new Promise((r) => setTimeout(r, 20));
       try {
         const { doc, pages } = buildPdf(o);
-        if (o.dest === 'printer' && !inFrame) {
+        if (toPrinter) {
           doc.autoPrint(); const url = doc.output('bloburl');
           const fr = document.createElement('iframe'); fr.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0'; fr.src = url; document.body.appendChild(fr);
           fr.onload = () => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (err) { window.open(url); } setTimeout(() => fr.remove(), 60000); };
           closeModal(); toast('Sent ' + pages + ' page' + (pages > 1 ? 's' : '') + ' to the print dialog');
         } else { closeModal(); await saveFile(fileName('pdf'), doc.output('blob')); }
-      } catch (err) { t.disabled = false; t.textContent = 'Save PDF'; toast('Could not build the PDF: ' + err.message); }
+      } catch (err) { t.disabled = false; t.textContent = lbl; toast('Could not build the PDF: ' + err.message); }
     }
   };
 }

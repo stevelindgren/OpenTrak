@@ -50,7 +50,13 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Hidden in standalone copies: running it outside Claude needs an AI API key, which must live on a server, not in this file (planned with the server version)
 
 **Output**
-- Print / PDF in Letter, Legal, Tabloid (11×17), A4 or A3, landscape or portrait, with a title block, legend and multi-page output. The PDF is vector, so it stays sharp at any size.
+- **Print preview** (Ctrl+P): the real pages, drawn by the same code as the PDF, update as you change the options. Zoom to the whole page, fit width or 100%
+  - Page: Letter, Legal, Tabloid (11×17), A4 or A3; landscape or portrait; compact, normal or roomy rows
+  - Activities: all, as shown on screen, critical only, or not yet complete; with or without WBS group rows
+  - Chart: logic lines, baseline, progress and float bars, non-work day shading, data date line, legend and title block, and the label beside each bar
+  - Columns for printing, separate from the screen (or the same as the screen by default), and an optional timescale range
+  - Title, company / prepared by, and a revision note such as "Rev 2 — overtime option" printed in the page header
+  - Saves a vector PDF (sharp at any size) or sends it to the printer. Settings are remembered with the project
 - CSV export for Excel, protected against spreadsheet formula injection
 - Project files are saved as `.json`, and work also autosaves in the browser
 
@@ -67,7 +73,7 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 | ? | Show all keyboard shortcuts |
 | Ctrl+Z / Ctrl+Y | Undo / redo |
 | Ctrl+S | Save the project file |
-| Ctrl+P | Print / PDF |
+| Ctrl+P | Print preview / PDF |
 | Esc | Close the panel or dialog |
 
 ## Run it on the web (GitHub Pages)
