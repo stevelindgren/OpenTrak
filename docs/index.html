@@ -235,6 +235,17 @@ textarea.inp{height:auto;min-height:70px;padding:8px 9px;resize:vertical}
 .toast .tact{border:0;background:transparent;color:var(--accent-fg);font-weight:600;padding:2px 4px;border-radius:5px}
 .toast .tact:hover{background:var(--tint-accent)}
 .subline-bad{color:var(--bad)!important}
+.grid tr.add td{background:transparent;border-bottom-color:var(--line-2)}
+.grid tr.add td.c-name{white-space:nowrap}
+.add-plus{display:inline-block;width:15px;color:var(--accent-fg);font-weight:600;margin-right:4px}
+.add-code{color:var(--faint);font-variant-numeric:tabular-nums}
+.grid .add-in{height:calc(var(--row) - 6px);border:1px solid transparent;border-radius:5px;background:transparent;padding:0 5px;margin:0 -6px;width:calc(100% + 6px);font-size:var(--fs);color:var(--text)}
+.grid td.c-name .add-in{width:calc(100% - 13px);margin-left:-3px}
+.grid .add-in.n{text-align:right}
+.grid .add-in::placeholder{color:var(--muted);opacity:1}
+.grid tr.add:hover .add-in{border-color:var(--line)}
+.grid .add-in:focus{outline:none;border-color:var(--accent-fg);background:var(--field);box-shadow:0 0 0 3px var(--tint-accent)}
+.grid tr.add .add-in[data-new="pred"]{color:var(--muted)} .grid tr.add .add-in[data-new="pred"]:focus{color:var(--text)}
 .np{display:flex;flex-direction:column;gap:14px}
 .np .f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)} .np .f>span{font-size:12px;color:var(--muted)} .np .seg{align-self:flex-start}
 .np-name input{height:40px;font-size:15px}
@@ -1412,14 +1423,22 @@ const actByCode = (c) => P.activities.find((a) => a.code.toLowerCase() === Strin
 const calById = (id) => P.calendars.find((c) => c.id === id) || P.calendars.find((c) => c.id === P.defaultCal) || P.calendars[0];
 const engCal = (a) => CPM.makeCal(calById(a.cal));
 
+function nextCodeIn(wbs) {
+  const inG = P.activities.filter((a) => a.wbs === wbs).map((a) => /^(.*?)(\d+)$/.exec(a.code)).filter(Boolean);
+  if (!inG.length) return nextCode();
+  const top = inG.reduce((m, x) => (+x[2] > +m[2] ? x : m)); const w = top[2].length;
+  for (let n = Math.floor(+top[2] / 10) * 10 + 10, i = 0; i < 500; n++, i++) { const c = top[1] + String(n).padStart(w, '0'); if (!actByCode(c)) return c; }
+  return nextCode();
+}
 function nextCode(prefix = 'A') {
+  if (!P.activities.length) return prefix + '1000'; // SureTrak-style numbering
   let m = 0; for (const a of P.activities) { const n = parseInt(String(a.code).replace(/\D/g, ''), 10); if (Number.isFinite(n)) m = Math.max(m, n); }
   return prefix + (Math.floor(m / 10) * 10 + 10);
 }
 
 // ---------- rows
 function issueIds() { const s = new Set(); for (const x of [...S.errors, ...S.warnings]) (x.ids || []).forEach((i) => s.add(i)); return s; }
-function buildRows() {
+function buildRows(withAdd = false) {
   const q = ui.q.trim().toLowerCase(); const iss = ui.filter === 'issues' ? issueIds() : null;
   const pass = (a) => {
     const r = S.acts[a.id] || {};
@@ -1441,8 +1460,12 @@ function buildRows() {
     const all = g.list.map((a) => S.acts[a.id]).filter(Boolean);
     const s = Math.min(...all.map((r) => r.esP)), f = Math.max(...all.map((r) => r.efP));
     out.push({ g: g.w, n: g.list.length, s: Number.isFinite(s) ? s : null, f: Number.isFinite(f) ? f : null, crit: all.some((r) => r.critical) });
-    if (!ui.collapsed.has(g.w.id)) for (const a of list) out.push({ a });
+    if (!ui.collapsed.has(g.w.id)) {
+      for (const a of list) out.push({ a });
+      if (withAdd && ui.filter === 'all' && !q && (g.w.id !== '' || !P.wbs.length)) out.push({ add: g.w.id, after: list.length ? list[list.length - 1].code : '' });
+    }
   }
+  if (withAdd && !out.length && !P.wbs.length && ui.filter === 'all' && !q) out.push({ add: '', after: '' });
   return out;
 }
 
@@ -1496,7 +1519,7 @@ function renderTable() {
     + cs.map((c) => '<th scope="col" class="' + (c.n ? 'n' : '') + '" data-k="' + c.k + '">' + esc(c.l) + '<span class="rz" data-rz="' + c.k + '" title="Drag to resize"></span></th>').join('') + '</tr></thead><tbody>';
   const noActs = !P.activities.length; let emptyRow = '';
   if (!rows.length || noActs) {
-    const msg = !P.activities.length ? 'No activities yet. Click <b>＋ Activity</b> or press <kbd>Insert</kbd> to add the first one.'
+    const msg = !P.activities.length ? 'No activities yet. Type a name in the <b>＋ Add activity</b> line and press Enter. Keep typing to add the next one.'
       : ui.filter === 'issues' && !ui.q.trim() ? '✓ No issues. The schedule check found nothing to fix.'
       : 'No activities match ' + (ui.q.trim() ? '“' + esc(ui.q.trim()) + '”' + (ui.filter !== 'all' ? ' with this filter' : '') : 'this filter') + '.';
     emptyRow = '<tr><td colspan="' + cs.length + '" class="empty">' + msg + (P.activities.length ? '<div style="margin-top:10px"><button class="btn sm" data-showall>Show all activities</button></div>' : '') + '</td></tr>';
@@ -1511,6 +1534,19 @@ function renderTable() {
         h += '<td class="d">' + ((k === 'start' || k === 'es') && row.s != null ? fmt(CPM.toIso(row.s)) : (k === 'finish' || k === 'ef') && row.f != null ? fmt(CPM.toIso(row.f - 1)) : '') + '</td>';
       }
       h += '</tr>'; continue;
+    }
+    if (row.add !== undefined) {
+      const gname = (P.wbs.find((w) => w.id === row.add) || { name: 'the project' }).name;
+      const nameK = cs.some((c) => c.k === 'name') ? 'name' : cs[0].k;
+      h += '<tr class="add" data-g="' + esc(row.add) + '">' + cs.map((c) => {
+        let v = '';
+        if (c.k === nameK) v = '<span class="add-plus" aria-hidden="true">＋</span><input class="add-in" data-new="name" spellcheck="true" maxlength="200" placeholder="Add activity…" aria-label="New activity in ' + esc(gname) + '">';
+        else if (c.k === 'code') v = '<span class="add-code">' + esc(nextCodeIn(row.add)) + '</span>';
+        else if (c.k === 'od') v = '<input class="add-in n" data-new="od" type="number" min="0" max="99999" placeholder="5" aria-label="Duration in work days (default 5)">';
+        else if (c.k === 'pred') v = '<input class="add-in" data-new="pred" spellcheck="false" value="' + esc(row.after) + '" placeholder="none" aria-label="Predecessors of the new activity" title="Linked after this activity. Edit or clear it before pressing Enter.">';
+        return '<td class="c-' + c.k + (c.n ? ' n' : '') + '">' + v + '</td>';
+      }).join('') + '</tr>';
+      continue;
     }
     const a = row.a, r = S.acts[a.id] || {};
     h += '<tr class="act' + (ui.sel === a.id ? ' sel' : '') + (r.critical ? ' crit' : '') + (r.status === 'done' ? ' done' : '') + '" data-id="' + esc(a.id) + '">'
@@ -1599,6 +1635,7 @@ function renderGantt() {
       }
       return;
     }
+    if (!row.a) return; // entry line
     const a = row.a, r = S.acts[a.id]; if (!r) return;
     rowY.set(a.id, y);
     if (ui.sel === a.id) bg += '<rect x="0" y="' + y + '" width="' + W + '" height="' + RH + '" fill="var(--sel)"/>';
@@ -1866,7 +1903,7 @@ function setField(a, f, raw) {
 }
 // Replace an activity's predecessors (dir 'p') or successors ('s') from typed text like "A1020, A1030 SS+3"
 const linksText = (a, dir) => P.relationships.filter((l) => (dir === 'p' ? l.to : l.from) === a.id).map((l) => relTxt(act(dir === 'p' ? l.from : l.to).code, l)).join(', ');
-function setLinks(a, dir, raw) {
+function setLinks(a, dir, raw, quiet) {
   let list;
   try { list = CPM.parseLinks(str(raw, 2000), (c) => !!actByCode(c)); } catch (e) { toast(e.message); return false; }
   const want = new Map(); const unknown = [];
@@ -1886,7 +1923,7 @@ function setLinks(a, dir, raw) {
   }
   const t = CPM.schedule(P); const loop = t.errors.find((e) => /loop/i.test(e.msg));
   if (loop) { toast('Not changed: that would make a loop (' + loop.msg.replace(/^Logic loop:\s*/, '').replace(/\.\s*Remove.*$/, '') + ')'); return false; }
-  const n = want.size; setTimeout(() => toast(a.code + ' ' + (dir === 'p' ? 'predecessors' : 'successors') + ': ' + (n ? linksText(a, dir) : 'none')), 0);
+  const n = want.size; if (!quiet) setTimeout(() => toast(a.code + ' ' + (dir === 'p' ? 'predecessors' : 'successors') + ': ' + (n ? linksText(a, dir) : 'none')), 0);
 }
 function defaultActual(a, which) {
   // actuals default to the planned date, but never on/after the data date
@@ -1927,6 +1964,32 @@ function delActivity(id) {
   toast('Deleted ' + a.code + (nl ? ' and its ' + nl + ' link' + (nl > 1 ? 's' : '') : ''), { label: 'Undo', fn: () => { doUndo(); select(id, true); } });
 }
 
+// ---------- entry line: type a name (and optionally duration / predecessors), Enter adds it and the next line is ready
+function addFromEntry(tr) {
+  const v = (k) => { const el = tr.querySelector('[data-new="' + k + '"]'); return el ? el.value : ''; };
+  const name = v('name').trim(), wbs = tr.dataset.g;
+  if (!name) { const n = tr.querySelector('[data-new="name"]'); if (n && document.activeElement !== n) toast('Type a name for the new activity first'); if (n) n.focus(); return; }
+  const odRaw = v('od').trim(); const od = odRaw === '' ? 5 : int(odRaw, 0, 99999, 5);
+  const a = { id: uid(), code: nextCodeIn(wbs), name: str(name), type: od === 0 ? 'finish' : 'task', wbs: P.wbs.some((w) => w.id === wbs) ? wbs : '', cal: '', od, rd: od, pct: 0, as: '', af: '', cType: '', cDate: '', res: '', cost: 0, notes: '' };
+  const pred = v('pred').trim();
+  const ok = commit(() => { P.activities.push(a); if (pred) return setLinks(a, 'p', pred, true); });
+  if (ok === false) return; // message already shown; what was typed stays in the line
+  toast('Added ' + a.code + (od === 0 ? ' (milestone)' : '') + (pred ? ' after ' + linksText(a, 'p') : ''));
+  const nx = $('#grid tr.add[data-g="' + CSS.escape(wbs) + '"] [data-new="name"]'); if (nx) focusEntry(nx);
+}
+// keep the table's horizontal position; only scroll down if the entry line is out of view
+function focusEntry(inp) {
+  const pane = $('#left'), sl = pane.scrollLeft; inp.focus({ preventScroll: true }); pane.scrollLeft = sl;
+  let r = inp.getBoundingClientRect(); const b = pane.getBoundingClientRect(), head = 48;
+  if (r.left < b.left + 24) { pane.scrollLeft -= b.left + 24 - r.left; r = inp.getBoundingClientRect(); }
+  if (r.bottom > b.bottom - 8) pane.scrollTop += r.bottom - b.bottom + 8 + P.layout.rowH; else if (r.top < b.top + head) pane.scrollTop -= b.top + head - r.top;
+}
+$('#grid').addEventListener('keydown', (e) => {
+  const t = e.target; if (!t.classList || !t.classList.contains('add-in')) return;
+  if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addFromEntry(t.closest('tr')); }
+  else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); t.blur(); render(); } // clears the line and restores the suggested predecessor
+});
+
 // ---------- inline edit
 function startEdit(td) {
   if (!td || !td.classList.contains('ed') || td.querySelector('input')) return;
@@ -1957,7 +2020,7 @@ function startEdit(td) {
 
 // ---------- render
 function render() {
-  rows = buildRows();
+  rows = buildRows(true);
   $('#pname').value = P.name; $('#pname').size = Math.max(10, Math.min(60, P.name.length + 1));
   $('#dd').value = P.dataDate;
   $('#sStart').textContent = fmt(S.start) || '–';
@@ -2024,6 +2087,7 @@ function toast(msg, action) {
 
 const KEYS = [
   ['Insert or Ctrl+Enter', 'Add an activity after the selected one, linked to it'],
+  ['Enter (in the ＋ Add activity line)', 'Add it and start the next one; Esc clears the line'],
   ['↑ / ↓', 'Move the selection'],
   ['F2', 'Rename the selected activity (or click any cell of the selected row to edit it)'],
   ['Enter / Tab / Shift+Tab', 'Save the cell / save and move to the next or previous cell'],
