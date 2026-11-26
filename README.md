@@ -24,6 +24,9 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Schedule check for logic loops, open ends, negative float, out-of-sequence progress and bad actual dates
 - Baseline (target) with a variance column and a finish variance in the toolbar
 - Filters (critical, incomplete, issues), search, Day/Week/Month zoom, undo and redo
+- Deletes and bar drags happen immediately with an **Undo** button in the confirmation message, instead of "are you sure?" dialogs
+- Dragging a bar's edge shows the new duration and finish date as you drag
+- The autosave status under the project name only says "Autosaved" when the save actually worked, and warns if the browser blocks storage
 
 **Formatting** (saved with the project)
 - Format Bars: color, thickness and position for each bar type; milestone shapes; bar labels; row height and text size
@@ -51,10 +54,12 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 
 | Key | Action |
 |---|---|
-| Insert or Ctrl+Enter | Add an activity after the selected one |
+| Insert or Ctrl+Enter | Add an activity after the selected one, linked to it |
 | ↑ / ↓ | Move the selection |
 | F2 | Rename the selected activity |
-| Delete | Delete the selected activity (asks first) |
+| Delete | Delete the selected activity (Undo in the message brings it back) |
+| / | Jump to search (Esc clears it) |
+| ? | Show all keyboard shortcuts |
 | Ctrl+Z / Ctrl+Y | Undo / redo |
 | Ctrl+S | Save the project file |
 | Ctrl+P | Print / PDF |

@@ -227,6 +227,14 @@ textarea.inp{height:auto;min-height:70px;padding:8px 9px;resize:vertical}
 .chk{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
 .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,8px);background:var(--raised);color:var(--text);border:1px solid var(--line);padding:9px 15px;border-radius:10px;font-size:12.5px;opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;z-index:60;max-width:90vw;box-shadow:var(--shadow)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+.toast{display:flex;align-items:center;gap:12px}
+.toast.show.has-act{pointer-events:auto}
+.toast .tact{border:0;background:transparent;color:var(--accent-fg);font-weight:600;padding:2px 4px;border-radius:5px}
+.toast .tact:hover{background:var(--tint-accent)}
+.subline-bad{color:var(--bad)!important}
+.kbd-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.kbd-tbl td{padding:6px 4px;border-bottom:1px solid var(--line-2)} .kbd-tbl td:first-child{white-space:nowrap;width:42%}
+.kbd-tbl kbd{font-size:11.5px;color:var(--text);padding:1px 6px;background:var(--panel-2)}
 .empty{padding:48px 24px;text-align:center;color:var(--muted)}
 .filebtn{justify-content:flex-start;height:42px;gap:10px}
 .filebtn svg{color:var(--accent-fg)}
@@ -314,7 +322,7 @@ input[type=color]{background:var(--field)!important}
       </div>
     </header>
     <div class="tb">
-      <label class="search"><svg class="i" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input id="q" placeholder="Search activities" aria-label="Search activities"></label>
+      <label class="search"><svg class="i" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input id="q" placeholder="Search activities   /" aria-label="Search activities (press / to jump here)"></label>
       <div class="seg" id="fseg" role="group" aria-label="Filter">
         <button data-f="all" class="on">All</button><button data-f="crit">Critical</button><button data-f="open">Incomplete</button><button data-f="issues">Issues</button>
       </div>
@@ -575,7 +583,9 @@ function recalc() {
   try { S = CPM.schedule(P); }
   catch (e) { S = { acts: {}, errors: [{ msg: e.message }], warnings: [], drivingRels: [] }; }
 }
-function persist() { try { localStorage.setItem(STORE, JSON.stringify(P)); } catch (e) { /* storage unavailable */ } }
+// autosave status shown under the project name: only claims "Autosaved" when the write actually worked
+const saveState = { at: null, ok: true };
+function persist() { try { localStorage.setItem(STORE, JSON.stringify(P)); saveState.ok = true; saveState.at = new Date(); } catch (e) { saveState.ok = false; } }
 function commit(fn) {
   const before = JSON.stringify(P);
   const res = fn();
@@ -676,7 +686,12 @@ function renderTable() {
   const root = document.documentElement; root.style.setProperty('--row', P.layout.rowH + 'px'); root.style.setProperty('--fs', P.layout.fontSize + 'px');
   let h = '<colgroup>' + cs.map((c) => '<col data-k="' + c.k + '" style="width:' + c.w + 'px">').join('') + '</colgroup><thead><tr>'
     + cs.map((c) => '<th scope="col" class="' + (c.n ? 'n' : '') + '" data-k="' + c.k + '">' + esc(c.l) + '<span class="rz" data-rz="' + c.k + '" title="Drag to resize"></span></th>').join('') + '</tr></thead><tbody>';
-  if (!rows.length) h += '<tr><td colspan="' + cs.length + '" class="empty">' + (P.activities.length ? 'No activities match this filter.' : 'No activities yet — click <b>＋ Activity</b> to start.') + '</td></tr>';
+  if (!rows.length) {
+    const msg = !P.activities.length ? 'No activities yet. Click <b>＋ Activity</b> or press <kbd>Insert</kbd> to add the first one.'
+      : ui.filter === 'issues' && !ui.q.trim() ? '✓ No issues. The schedule check found nothing to fix.'
+      : 'No activities match ' + (ui.q.trim() ? '“' + esc(ui.q.trim()) + '”' + (ui.filter !== 'all' ? ' with this filter' : '') : 'this filter') + '.';
+    h += '<tr><td colspan="' + cs.length + '" class="empty">' + msg + (P.activities.length ? '<div style="margin-top:10px"><button class="btn sm" data-showall>Show all activities</button></div>' : '') + '</td></tr>';
+  }
   let span = cs.findIndex((c) => ['start', 'finish', 'es', 'ef'].includes(c.k)); if (span < 1) span = cs.length;
   for (const row of rows) {
     if (row.g) {
@@ -903,7 +918,7 @@ function renderDetail() {
     ${a.type !== 'finish' ? `<label class="f">Actual start<input class="inp" type="date" data-f="as" value="${a.as}"></label>` : ''}
     ${a.type !== 'start' ? `<label class="f">Actual finish<input class="inp" type="date" data-f="af" value="${a.af}"></label>` : ''}
     ${isTask ? `<label class="f">% complete<input class="inp" type="number" min="0" max="100" data-f="pct" value="${r.status === 'done' ? 100 : a.pct}"></label>
-    <label class="f">Remaining duration<input class="inp" type="number" min="0" data-f="rd" value="${r.status === 'done' ? 0 : r.status === 'planned' ? a.od : a.rd}" ${r.status !== 'active' ? 'disabled title="Set an actual start first"' : ''}></label>` : ''}
+    <label class="f">Remaining duration<input class="inp" type="number" min="0" data-f="rd" value="${r.status === 'done' ? 0 : r.status === 'planned' ? a.od : a.rd}" ${r.status !== 'active' ? 'disabled aria-describedby="rdHint"' : ''}>${r.status === 'planned' ? '<span class="hint" id="rdHint" style="margin:0">Editable once the activity has started</span>' : r.status === 'done' ? '<span class="hint" id="rdHint" style="margin:0">Complete, nothing remaining</span>' : ''}</label>` : ''}
   </div><div class="btnrow" style="margin-top:8px">
     ${r.status === 'planned' ? '<button class="btn sm" data-act="start">Mark started</button>' : ''}
     ${r.status !== 'done' ? '<button class="btn sm" data-act="finish">Mark complete</button>' : ''}
@@ -916,7 +931,8 @@ function renderDetail() {
   <div class="sec"><h4>Predecessors (${preds.length})</h4>${relRows(preds, 'p')}
     <div class="addrow"><input class="inp" list="dl-acts" placeholder="Add predecessor — type ID or name" data-add="p"><button class="btn sm" data-addbtn="p">Add</button></div></div>
   <div class="sec"><h4>Successors (${succs.length})</h4>${relRows(succs, 's')}
-    <div class="addrow"><input class="inp" list="dl-acts" placeholder="Add successor — type ID or name" data-add="s"><button class="btn sm" data-addbtn="s">Add</button></div></div>
+    <div class="addrow"><input class="inp" list="dl-acts" placeholder="Add successor — type ID or name" data-add="s"><button class="btn sm" data-addbtn="s">Add</button></div>
+    ${preds.length || succs.length ? '<p class="hint"><b>FS</b> finish → start · <b>SS</b> start → start · <b>FF</b> finish → finish · <b>SF</b> start → finish. Lag is in work days; a negative lag is a lead. <b>Driving</b> links set this activity’s dates.</p>' : ''}</div>
   <datalist id="dl-acts">${opts}</datalist>
   <div class="sec"><h4>Notes</h4><textarea class="inp" data-f="notes" spellcheck="true" maxlength="${LIM.notes}" placeholder="Notes, delay causes, RFI numbers…">${esc(a.notes)}</textarea></div>
   <div class="btnrow"><button class="btn sm" data-act="dup">Duplicate</button><button class="btn sm danger" data-act="del">Delete activity</button></div>`;
@@ -974,19 +990,22 @@ function addActivity(type = 'task') {
 function addRel(from, to, type = 'FS', lag = 0) {
   if (from === to) return;
   if (P.relationships.some((l) => l.from === from && l.to === to)) { toast('Those activities are already linked'); return; }
+  let loop = null;
   const ok = commit(() => {
     P.relationships.push({ id: uid(), from, to, type, lag });
-    const t = CPM.schedule(P); if (t.errors.some((e) => /loop/i.test(e.msg))) return false;
+    const t = CPM.schedule(P); loop = t.errors.find((e) => /loop/i.test(e.msg)); if (loop) return false;
   });
-  if (ok === false) toast('That link would create a logic loop'); else toast('Linked ' + act(from).code + ' → ' + act(to).code + ' (' + type + ')');
+  if (ok === false) toast('Not linked: ' + act(from).code + ' → ' + act(to).code + ' would make a loop (' + loop.msg.replace(/^Logic loop:\s*/, '').replace(/\.\s*Remove.*$/, '') + ')');
+  else toast('Linked ' + act(from).code + ' → ' + act(to).code + ' (' + type + ')');
 }
+// Delete straight away and offer Undo, instead of an "are you sure?" dialog (undo fully restores it)
 function delActivity(id) {
-  const a = act(id);
-  confirmBox('Delete ' + a.code + '?', 'This removes “' + a.name + '” and its ' + P.relationships.filter((l) => l.from === id || l.to === id).length + ' logic links. You can undo this.', 'Delete', () => {
-    const vis = rows.filter((r) => r.a).map((r) => r.a.id); const i = vis.indexOf(id);
-    commit(() => { P.activities = P.activities.filter((x) => x.id !== id); P.relationships = P.relationships.filter((l) => l.from !== id && l.to !== id); if (P.baseline) delete P.baseline.acts[id]; });
-    ui.sel = vis[i + 1] || vis[i - 1] || null; render();
-  });
+  const a = act(id); if (!a) return;
+  const nl = P.relationships.filter((l) => l.from === id || l.to === id).length;
+  const vis = rows.filter((r) => r.a).map((r) => r.a.id); const i = vis.indexOf(id);
+  commit(() => { P.activities = P.activities.filter((x) => x.id !== id); P.relationships = P.relationships.filter((l) => l.from !== id && l.to !== id); if (P.baseline) delete P.baseline.acts[id]; });
+  ui.sel = vis[i + 1] || vis[i - 1] || null; render();
+  toast('Deleted ' + a.code + (nl ? ' and its ' + nl + ' link' + (nl > 1 ? 's' : '') : ''), { label: 'Undo', fn: () => { doUndo(); select(id, true); } });
 }
 
 // ---------- inline edit
@@ -1036,7 +1055,8 @@ function render() {
   const SB = screenBars(P.layout.bars), rs = document.documentElement.style;
   rs.setProperty('--bar', SB.remaining.color); rs.setProperty('--crit', SB.critical.color); rs.setProperty('--done', SB.progress.color); rs.setProperty('--blc', SB.target.color);
   rs.setProperty('--crit-ink', theme === 'dark' ? 'color-mix(in srgb, ' + SB.critical.color + ' 62%, #fff)' : SB.critical.color);
-  const at = new Date(); $('#subline').textContent = 'Saved ' + at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const sl = $('#subline'); sl.classList.toggle('subline-bad', !saveState.ok);
+  sl.textContent = !saveState.ok ? 'Not autosaved: this browser blocks storage. Use File → Save.' : saveState.at ? 'Autosaved ' + saveState.at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
   $('#bUndo').disabled = !undo.length; $('#bRedo').disabled = !redo.length;
   $('#main').className = 'main v-' + ui.view + (ui.sel && act(ui.sel) ? ' dopen' : '') + (ui.ai ? ' aiopen' : '');
   $$('#vseg button').forEach((b) => b.classList.toggle('on', b.dataset.v === ui.view));
@@ -1075,8 +1095,30 @@ function confirmBox(title, text, okLabel, fn) {
   modal(title, '<p style="margin:0;line-height:1.5">' + esc(text) + '</p>', '<button class="btn" data-close>Cancel</button><button class="btn pri" id="cOk">' + esc(okLabel) + '</button>');
   modalHandler = (e) => { if (e.target.id === 'cOk') { closeModal(); fn(); } };
 }
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
+// toast(msg) for feedback; toast(msg, { label, fn }) adds an action button (e.g. Undo) and stays up longer
+function toast(msg, action) {
+  const t = $('#toast'); t.textContent = msg; t.classList.toggle('has-act', !!action);
+  if (action) { const b = document.createElement('button'); b.className = 'tact'; b.type = 'button'; b.textContent = action.label; b.onclick = () => { t.classList.remove('show'); action.fn(); }; t.appendChild(b); }
+  t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show', 'has-act'), action ? 7000 : 2200);
+}
 
+const KEYS = [
+  ['Insert or Ctrl+Enter', 'Add an activity after the selected one, linked to it'],
+  ['↑ / ↓', 'Move the selection'],
+  ['F2', 'Rename the selected activity (or click any cell of the selected row to edit it)'],
+  ['Enter / Tab / Shift+Tab', 'Save the cell / save and move to the next or previous cell'],
+  ['Delete', 'Delete the selected activity (Undo brings it back)'],
+  ['Ctrl+Z / Ctrl+Y', 'Undo / redo'],
+  ['/', 'Search activities'],
+  ['Ctrl+S', 'Save the project file'],
+  ['Ctrl+P', 'Print / PDF'],
+  ['Esc', 'Cancel an edit, close the panel or dialog'],
+  ['?', 'Show this list'],
+];
+function showKeys() {
+  modal('Keyboard shortcuts', '<table class="kbd-tbl">' + KEYS.map(([k, d]) => '<tr><td>' + k.split(/( \/ | or |, )/).map((p) => /^( \/ | or |, )$/.test(p) ? esc(p) : '<kbd>' + esc(p) + '</kbd>').join('') + '</td><td>' + esc(d) + '</td></tr>').join('') + '</table>'
+    + '<p class="hint">On a Mac, use ⌘ in place of Ctrl.</p>');
+}
 function showCheck() {
   const items = [...S.errors.map((e) => ({ ...e, k: 'e' })), ...S.warnings.map((w) => ({ ...w, k: 'w' }))];
   const body = items.length ? items.map((x, i) => '<div class="issue" data-i="' + i + '"><span class="k ' + x.k + '">' + (x.k === 'e' ? 'Error' : 'Check') + '</span><div>' + esc(x.msg) + '</div></div>').join('')
@@ -1173,9 +1215,11 @@ function showFile() {
     + '<button class="btn filebtn" data-fa="csv"><svg class="i" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="1.8"/><path d="M2.5 6.5h11M2.5 10h11M6.5 6.5v7"/></svg><span>Export activity list <span style="color:var(--muted)">— .csv for Excel</span></span></button>'
     + '<button class="btn filebtn" data-fa="new"><svg class="i" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg><span>New blank project</span></button>'
     + '<button class="btn filebtn" data-fa="sample"><svg class="i" viewBox="0 0 16 16"><path d="M2.5 13.5h11M4 13.5V7l4-3 4 3v6.5M6.5 13.5v-3h3v3"/></svg><span>Load sample project <span style="color:var(--muted)">— elevator modernization</span></span></button>'
-    + '</div><p class="hint">Your work also autosaves in this browser. Save a project file to keep a permanent copy or send it to someone.</p>');
+    + '</div><p class="hint">Your work also autosaves in this browser. Save a project file to keep a permanent copy or send it to someone.</p>'
+    + '<p class="hint"><a href="#" data-fa="keys" style="color:var(--accent-fg)">Keyboard shortcuts</a> (press <kbd>?</kbd> anytime)</p>');
   modalHandler = (e) => {
     const f = e.target.closest('[data-fa]'); if (!f) return; const k = f.dataset.fa;
+    if (k === 'keys') { e.preventDefault(); showKeys(); return; }
     if (k === 'save') { closeModal(); saveFile(fileName('json'), JSON.stringify(P, null, 1)); }
     if (k === 'open') { closeModal(); $('#fileIn').click(); }
     if (k === 'pdf') { closeModal(); showPrint(); }
@@ -1879,6 +1923,7 @@ setTimeout(spellInit, 300);
 // ---------- events
 $('#grid').addEventListener('click', (e) => {
   if (e.target.closest('[data-rz]')) return;
+  if (e.target.closest('[data-showall]')) { ui.q = ''; $('#q').value = ''; ui.filter = 'all'; ui.collapsed.clear(); render(); return; }
   const g = e.target.closest('tr.g'); if (g) { const id = g.dataset.g; ui.collapsed.has(id) ? ui.collapsed.delete(id) : ui.collapsed.add(id); render(); return; }
   const tr = e.target.closest('tr.act'); if (!tr) return;
   const td = e.target.closest('td');
@@ -1910,8 +1955,18 @@ $('#gwrap').addEventListener('pointermove', (e) => {
     const t = $('#tmpLink'); t.style.display = ''; t.setAttribute('d', 'M' + drag.x0 + ' ' + drag.y0 + 'L' + x + ' ' + y);
   } else {
     const w = Math.max(gx.px, drag.w0 + e.clientX - drag.sx); drag.rect.setAttribute('width', w); drag.w = w;
+    const { dur, active, finish } = dragDur(drag); const a = act(drag.id);
+    if (dur !== drag.last) { drag.last = dur; toast(a.code + ': ' + (active ? 'remaining ' : '') + dur + ' day' + (dur > 1 ? 's' : '') + ', finishes ' + fmt(finish)); }
   }
 });
+// duration (work days) and finish date that a resize drag would produce
+function dragDur(d) {
+  const a = act(d.id), r = S.acts[d.id]; const cal = engCal(a);
+  const startP = r.status === 'active' ? r.rsP : r.esP;
+  const endP = Math.round(+d.rect.getAttribute('x') / gx.px + gx.lo + d.w / gx.px);
+  const dur = Math.max(1, cal.between(startP, Math.max(endP, startP + 1)));
+  return { dur, active: r.status === 'active', finish: CPM.toIso(cal.add(startP, dur) - 1) };
+}
 $('#gwrap').addEventListener('pointerup', (e) => {
   if (!drag) return; const d = drag; drag = null;
   if (d.mode === 'link') {
@@ -1923,12 +1978,9 @@ $('#gwrap').addEventListener('pointerup', (e) => {
       else { const box = $('#gantt').getBoundingClientRect(); const i = Math.floor((e.clientY - box.top - gx.HH) / gx.RH); const row = rows[i]; if (row && row.a && row.a.id !== d.id) addRel(d.id, row.a.id, 'FS', 0); }
     }
   } else if (d.w != null) {
-    const a = act(d.id), r = S.acts[d.id]; const cal = engCal(a);
-    const startP = r.status === 'active' ? r.rsP : r.esP;
-    const endP = Math.round(+d.rect.getAttribute('x') / gx.px + gx.lo + d.w / gx.px);
-    const dur = Math.max(1, cal.between(startP, Math.max(endP, startP + 1)));
-    commit(() => { if (r.status === 'active') a.rd = dur; else { a.od = dur; a.rd = dur; } });
-    toast(a.code + ': ' + (r.status === 'active' ? 'remaining' : 'duration') + ' ' + dur + 'd');
+    const a = act(d.id); const { dur, active } = dragDur(d);
+    commit(() => { if (active) a.rd = dur; else { a.od = dur; a.rd = dur; } });
+    toast(a.code + ': ' + (active ? 'remaining' : 'duration') + ' set to ' + dur + ' day' + (dur > 1 ? 's' : ''), { label: 'Undo', fn: doUndo });
   }
 });
 
@@ -2002,12 +2054,15 @@ $('#ov').addEventListener('input', (e) => { if (modalHandler && e.target.type ==
 // keyboard
 document.addEventListener('keydown', (e) => {
   const inField = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if (e.key === 'Escape' && document.activeElement === $('#q') && !$('#ov').classList.contains('open')) { if (ui.q) { ui.q = ''; $('#q').value = ''; render(); } $('#q').blur(); return; }
   if (e.key === 'Escape') { if ($('#ov').classList.contains('open')) closeModal(); else if (ui.ai) aiOpen(false); else if (ui.sel && !inField) { ui.sel = null; render(); } return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !inField) { e.preventDefault(); e.shiftKey ? doRedo() : doUndo(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y' && !inField) { e.preventDefault(); doRedo(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') { e.preventDefault(); showPrint(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveFile(fileName('json'), JSON.stringify(P, null, 1)); return; }
   if (inField || $('#ov').classList.contains('open')) return;
+  if (e.key === '/' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); $('#q').focus(); $('#q').select(); return; }
+  if (e.key === '?') { e.preventDefault(); showKeys(); return; }
   if (e.key === 'Insert' || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); addActivity('task'); }
   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!ui.sel) { const f = rows.find((r) => r.a); if (f) select(f.a.id, true); } else step(e.key === 'ArrowDown' ? 1 : -1); }
   if (e.key === 'Delete' && ui.sel) { e.preventDefault(); delActivity(ui.sel); }
