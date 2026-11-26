@@ -232,6 +232,38 @@ textarea.inp{height:auto;min-height:70px;padding:8px 9px;resize:vertical}
 .toast .tact{border:0;background:transparent;color:var(--accent-fg);font-weight:600;padding:2px 4px;border-radius:5px}
 .toast .tact:hover{background:var(--tint-accent)}
 .subline-bad{color:var(--bad)!important}
+.modal.cmdk{width:min(600px,100%);align-self:flex-start;margin-top:10vh}
+.modal.cmdk .mh{display:none}
+.modal.cmdk .mb{padding:10px}
+.cmd-in{height:42px;font-size:15px}
+.cmd-list{list-style:none;margin:8px 0 0;padding:0;max-height:min(420px,60vh);overflow:auto}
+.cmd-list li{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmd-list li.on{background:var(--sel)}
+.cmd-list li:hover:not(.cmd-none){background:var(--hover)}
+.cmd-list li kbd{margin-left:auto}
+.cmd-list .ck{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;flex:none}
+.cmd-list .cmd-none{color:var(--muted);cursor:default}
+.pg-top{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
+.pg-top .f{width:170px}
+.pg-row{display:grid;grid-template-columns:minmax(180px,1fr) 236px 290px;gap:8px 14px;align-items:center;padding:9px 0;border-top:1px solid var(--line-2)}
+.pg-t{min-width:0;font-size:12.5px;line-height:1.35} .pg-t small{display:block;color:var(--muted);font-size:11.5px}
+.pg-row .seg{justify-self:start}
+.pg-f{display:flex;gap:8px} .pg-f .f{width:140px} .pg-f .f:has(input[type=number]){width:90px}
+.pg-prev{margin-right:auto;font-size:12.5px;color:var(--muted);align-self:center}
+@media (max-width:760px){.pg-row{grid-template-columns:1fr}}
+.why-sum{margin:0 0 10px;line-height:1.5;font-size:12.5px}
+.why-sum a,.why-path a{color:var(--accent-fg);text-decoration:none;font-weight:500} .why-sum a:hover,.why-path a:hover{text-decoration:underline}
+.why-path{list-style:none;margin:0;padding:0;font-size:12.5px;border-left:2px solid var(--line);margin-left:4px}
+.why-path li{display:flex;align-items:center;gap:6px;padding:4px 0 4px 10px;position:relative}
+.why-path li::before{content:"";position:absolute;left:-5px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--panel);border:2px solid var(--faint)}
+.why-path li.me::before{border-color:var(--accent-fg);background:var(--accent-fg)}
+.why-path li.done::before{border-color:var(--done);background:var(--done)}
+.why-path li.why-more::before{display:none}.why-path li.why-more{padding:2px 0 2px 6px}
+.why-path a{flex:none;width:52px}
+.why-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.why-d{flex:none;color:var(--muted);font-variant-numeric:tabular-nums;font-size:11.5px}
+.why-add{flex:none;font-size:11px;font-weight:600;color:var(--bad);background:var(--tint-bad);border-radius:4px;padding:0 5px}
+.why-lk{flex:none;font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;min-width:26px;text-align:center}
 .kbd-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
 .kbd-tbl td{padding:6px 4px;border-bottom:1px solid var(--line-2)} .kbd-tbl td:first-child{white-space:nowrap;width:42%}
 .kbd-tbl kbd{font-size:11.5px;color:var(--text);padding:1px 6px;background:var(--panel-2)}
@@ -286,6 +318,7 @@ input[type=color]{background:var(--field)!important}
 <div class="app">
   <nav class="rail" aria-label="Tools">
     <div class="mark" aria-hidden="true"><svg viewBox="0 0 16 16" width="18" height="18"><rect x="1.5" y="2.5" width="8" height="2.6" rx=".6" fill="#5a6cf0"/><rect x="5" y="6.7" width="9.5" height="2.6" rx=".6" fill="#ff4d4d"/><rect x="3" y="10.9" width="6" height="2.6" rx=".6" fill="#2fbf4a"/></svg></div>
+    <button class="rb" id="bCmd" data-tip="Go to anything (Ctrl+K)" aria-label="Go to anything, Ctrl+K" aria-keyshortcuts="Control+K"><svg class="i" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg></button>
     <button class="rb" id="bCal" data-c="teal" data-tip="Calendars" aria-label="Calendars"><svg class="i" viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="10" rx="1.8"/><path d="M2.5 6.8h11M5.5 2v3M10.5 2v3"/></svg></button>
     <button class="rb" id="bBaseline" data-c="amber" data-tip="Baseline" aria-label="Baseline"><svg class="i" viewBox="0 0 16 16"><path d="M3.5 14V2.5M3.5 3h8l-1.7 2.6 1.7 2.6h-8"/></svg></button>
     <button class="rb" id="bBars" data-c="violet" data-tip="Format bars" aria-label="Format bars"><svg class="i" viewBox="0 0 16 16" style="stroke-width:2.2"><path d="M2.5 4h6.5M5.5 8h8M2.5 12h5"/></svg></button>
@@ -304,6 +337,7 @@ input[type=color]{background:var(--field)!important}
       </div>
       <div class="pills">
         <label class="pill" title="Data date (status date)">Data date <input type="date" id="dd" aria-label="Data date"></label>
+        <button class="btn sm" id="bProg" title="Update progress to a new data date">Update progress</button>
         <span class="pill w-xl">Start <b id="sStart">–</b></span>
         <span class="pill">Finish <b id="sFinish">–</b></span>
         <span class="pill" id="sVarW"><span id="sVar">–</span></span>
@@ -458,11 +492,11 @@ const COLREG = {
   as: { l: 'Actual start', w: 90, d: 1 }, af: { l: 'Actual finish', w: 90, d: 1 },
   tf: { l: 'Total float', w: 52, n: 1 }, ff: { l: 'Free float', w: 52, n: 1 },
   bls: { l: 'BL start', w: 90, d: 1 }, blf: { l: 'BL finish', w: 90, d: 1 }, var: { l: 'BL var', w: 52, n: 1 },
-  pred: { l: 'Predecessors', w: 130 }, succ: { l: 'Successors', w: 130 },
+  pred: { l: 'Predecessors', w: 150, ed: 'links' }, succ: { l: 'Successors', w: 150, ed: 'links' },
   res: { l: 'Resource', w: 120, ed: 'text' }, cost: { l: 'Budget', w: 80, n: 1, ed: 'num' },
   cal: { l: 'Calendar', w: 110 }, cons: { l: 'Constraint', w: 120 }, wbs: { l: 'WBS', w: 120 },
 };
-const DEFCOLS = ['code', 'name', 'od', 'rd', 'pct', 'start', 'finish', 'tf', 'var'];
+const DEFCOLS = ['code', 'name', 'od', 'rd', 'pct', 'start', 'finish', 'tf', 'var', 'pred'];
 const HEX = /^#[0-9a-f]{6}$/i;
 const PRESETS = {
   classic: { label: 'SureTrak classic', bars: {
@@ -872,6 +906,90 @@ function renderGantt() {
 }
 function stickGanttHeader() { const g = $('#gantt .ghead-g'); if (g) g.setAttribute('transform', 'translate(0,' + $('#right').scrollTop + ')'); }
 
+// ---------- "Why these dates": the driving path back to its source, and where baseline slip was added
+// days late vs baseline, counted in work days on the project's default calendar (so every activity is comparable)
+function slipDays(a) {
+  const b = P.baseline && P.baseline.acts[a.id], r = S.acts[a.id];
+  if (!b || !b.f || !r || r.efP == null) return null;
+  return CPM.makeCal(calById(P.defaultCal)).between(CPM.toDn(b.f) + 1, r.efP);
+}
+function drivingPath(id) {
+  // follow driving links back; for work already started or done, continue through the predecessor that held up its start
+  const path = []; const seen = new Set(); let cur = id;
+  while (cur && !seen.has(cur) && path.length < 300) {
+    seen.add(cur); const a = act(cur), r = S.acts[cur]; if (!a || !r) break;
+    const d = r.driver || { kind: 'none' }; let next = null, via = null;
+    if (d.kind === 'rel') { next = d.from; via = { type: d.type, lag: d.lag }; }
+    else if (r.status !== 'planned' && (d.kind === 'datadate' || d.kind === 'done')) {
+      let best = null;
+      for (const l of P.relationships) {
+        if (l.to !== cur) continue; const q = S.acts[l.from]; if (!q || q.status === 'planned') continue;
+        const v = l.type === 'FS' || l.type === 'FF' ? q.efP : q.esP;
+        if (!best || v > best.v) best = { v, l };
+      }
+      if (best) { next = best.l.from; via = { type: best.l.type, lag: best.l.lag, hist: true }; }
+    }
+    path.push({ a, r, d, via });
+    cur = next;
+  }
+  return path;
+}
+function slipReason(a, r, added) {
+  const b = P.baseline.acts[a.id]; const grew = a.type === 'task' && b && a.od > b.d;
+  if (r.status === 'active') return (grew ? 'duration grew from ' + b.d + ' to ' + a.od + ' days; ' : '') + 'in progress, ' + a.rd + ' day' + (a.rd === 1 ? '' : 's') + ' to go';
+  if (grew) return 'duration grew from ' + b.d + ' to ' + a.od + ' days';
+  if (r.status === 'done' && a.as && a.af && b && b.d) { const took = engCal(a).between(CPM.toDn(a.as), CPM.toDn(a.af) + 1); if (took > b.d) return 'took ' + took + ' days, planned ' + b.d; }
+  if (r.status === 'done') return 'finished later than planned';
+  if (a.cType) return 'held by its ' + CT[a.cType].toLowerCase() + ' constraint';
+  return '';
+}
+function originText(x) {
+  const { a, r, d } = x;
+  if (r.status === 'done') return 'The path starts at ' + a.code + ', complete' + (a.af ? ' on ' + fmt(a.af) : '') + '.';
+  if (d.kind === 'datadate') return r.status === 'active' ? a.code + ' is in progress; its remaining work starts at the data date (' + fmt(P.dataDate) + ').' : a.code + ' is ready to start: nothing holds it except the data date (' + fmt(P.dataDate) + ').';
+  if (d.kind === 'projectstart') return a.code + ' starts at the project start (' + fmt(P.startDate) + ').';
+  if (d.kind === 'constraint') return a.code + ' is held by its constraint: ' + CT[d.cType].toLowerCase() + ' ' + fmt(a.cDate) + '.';
+  return '';
+}
+function whyHtml(a) {
+  const r = S.acts[a.id]; if (!r || r.status === 'done') return '';
+  const path = drivingPath(a.id); const slip = slipDays(a);
+  // slip each step added beyond the worst slip upstream of it; only steps with a real cause are blamed
+  const causes = []; let upstream = 0;
+  for (let i = path.length - 1; i >= 0; i--) {
+    const x = path[i]; const sd = slipDays(x.a); x.added = null; if (sd == null) continue;
+    const add = sd - upstream; upstream = Math.max(upstream, sd);
+    if (add > 0 && slip > 0) { const why = slipReason(x.a, x.r, add); if (why) { x.added = add; x.why = why; causes.push(x); } }
+  }
+  causes.sort((p, q) => q.added - p.added);
+  let h = '<div class="sec why"><h4>Why these dates</h4>';
+  if (slip != null && slip > 0) {
+    h += '<p class="why-sum"><b class="neg">' + slip + ' day' + (slip === 1 ? '' : 's') + ' later</b> than the baseline' + (causes.length ? '. The delay comes from ' + causes.slice(0, 3).map((c) => '<a href="#" data-goto="' + esc(c.a.id) + '">' + esc(c.a.code) + '</a> (' + esc(c.why) + ', +' + c.added + 'd)').join(', ') : '') + '.</p>';
+  } else if (slip != null && slip < 0) h += '<p class="why-sum"><b class="pos">' + -slip + ' day' + (slip === -1 ? '' : 's') + ' ahead</b> of the baseline.</p>';
+  else if (slip === 0) h += '<p class="why-sum">On the baseline.</p>';
+  if (path.length > 1) {
+    const keep = new Set([0, 1, path.length - 1]); path.forEach((x, i) => { if (x.added) keep.add(i); });
+    const all = ui.whyAll === a.id || path.length <= 7;
+    h += '<div class="hint" style="margin:0 0 6px">Driving path, from this activity back to where it starts:</div><ol class="why-path">';
+    let hidden = 0;
+    const flush = () => { if (hidden) { h += '<li class="why-more"><button class="btn sm ghost" data-whyall>' + hidden + ' more step' + (hidden > 1 ? 's' : '') + '…</button></li>'; hidden = 0; } };
+    path.forEach((x, i) => {
+      if (!all && !keep.has(i)) { hidden++; return; }
+      flush();
+      const v = path[i].via;
+      const lk = v ? '<span class="why-lk" title="' + esc((v.hist ? 'Started after ' : 'Driven by ') + v.type + ' link' + (v.lag ? ', lag ' + v.lag : '')) + '">' + esc(v.type + (v.lag ? (v.lag > 0 ? '+' : '') + v.lag : '')) + '</span>' : '<span class="why-lk" style="visibility:hidden">FS</span>';
+      h += '<li' + (i === 0 ? ' class="me"' : x.r.status === 'done' ? ' class="done"' : '') + '><a href="#" data-goto="' + esc(x.a.id) + '">' + esc(x.a.code) + '</a><span class="why-n" title="' + esc(x.a.name) + '">' + esc(x.a.name) + '</span>'
+        + (x.added ? '<span class="why-add" title="' + esc(x.why) + '">+' + x.added + 'd</span>' : '') + '<span class="why-d">' + (x.r.status === 'done' ? 'done ' + fmt(x.a.af || x.r.ef) : 'fin ' + fmt(x.r.ef)) + '</span>' + lk + '</li>';
+    });
+    flush(); h += '</ol>';
+  }
+  const o = originText(path[path.length - 1]); if (o) h += '<p class="hint" style="margin-top:6px">' + esc(o) + '</p>';
+  if (r.critical) h += '<p class="hint" style="margin-top:4px">On the critical path: every day this slips moves the project finish.</p>';
+  else if (r.tf > 0) h += '<p class="hint" style="margin-top:4px">' + r.tf + ' day' + (r.tf === 1 ? '' : 's') + ' of float before this would delay the finish.</p>';
+  if (aiSample && (slip > 0 || r.tf < 0)) h += '<button class="btn sm sky" data-act="recover" style="margin-top:8px"><svg class="i" viewBox="0 0 16 16"><path d="M8 2l1.3 3.4L12.7 7 9.3 8.3 8 11.7 6.7 8.3 3.3 7l3.4-1.6z"/></svg>Suggest ways to recover</button>';
+  return h + '</div>';
+}
+
 // ---------- detail drawer
 function relRows(list, dir) {
   if (!list.length) return '<div class="hint">None</div>';
@@ -914,6 +1032,7 @@ function renderDetail() {
     <span>Total float</span><b class="${r.tf < 0 ? 'neg' : ''}">${r.tf ?? '–'}</b><span>Free float</span><b>${r.ff ?? '–'}</b>
     ${b ? `<span>BL start</span><b>${fmt(b.s) || '–'}</b><span>BL finish</span><b>${fmt(b.f) || '–'}</b><span>BL variance</span><b class="${v < 0 ? 'neg' : v > 0 ? 'pos' : ''}">${v == null ? '–' : (v > 0 ? '+' : '') + v + 'd'}</b><span></span><b></b>` : ''}
   </div></div>
+  ${whyHtml(a)}
   <div class="sec"><h4>Progress</h4><div class="fg">
     ${a.type !== 'finish' ? `<label class="f">Actual start<input class="inp" type="date" data-f="as" value="${a.as}"></label>` : ''}
     ${a.type !== 'start' ? `<label class="f">Actual finish<input class="inp" type="date" data-f="af" value="${a.af}"></label>` : ''}
@@ -967,7 +1086,32 @@ function setField(a, f, raw) {
     case 'res': a.res = str(raw, 120); break;
     case 'cost': a.cost = Number.isFinite(+raw) ? Math.max(0, +raw) : 0; break;
     case 'notes': a.notes = str(raw, LIM.notes); break;
+    case 'pred': case 'succ': return setLinks(a, f === 'pred' ? 'p' : 's', raw);
   }
+}
+// Replace an activity's predecessors (dir 'p') or successors ('s') from typed text like "A1020, A1030 SS+3"
+const linksText = (a, dir) => P.relationships.filter((l) => (dir === 'p' ? l.to : l.from) === a.id).map((l) => relTxt(act(dir === 'p' ? l.from : l.to).code, l)).join(', ');
+function setLinks(a, dir, raw) {
+  let list;
+  try { list = CPM.parseLinks(str(raw, 2000), (c) => !!actByCode(c)); } catch (e) { toast(e.message); return false; }
+  const want = new Map(); const unknown = [];
+  for (const x of list) {
+    const o = actByCode(x.code); if (!o) { unknown.push(x.code); continue; }
+    if (o.id === a.id) { toast(a.code + ' can’t be linked to itself'); return false; }
+    want.set(o.id, x);
+  }
+  if (unknown.length) { toast('No activity with ID ' + unknown.join(', ') + '. Nothing was changed.'); return false; }
+  const mine = (l) => (dir === 'p' ? l.to : l.from) === a.id, other = (l) => (dir === 'p' ? l.from : l.to);
+  const old = new Map(P.relationships.filter(mine).map((l) => [other(l), l]));
+  P.relationships = P.relationships.filter((l) => !mine(l));
+  for (const [oid, x] of want) {
+    const from = dir === 'p' ? oid : a.id, to = dir === 'p' ? a.id : oid;
+    P.relationships = P.relationships.filter((l) => !(l.from === from && l.to === to));
+    P.relationships.push({ id: (old.get(oid) || {}).id || uid(), from, to, type: x.type, lag: x.lag });
+  }
+  const t = CPM.schedule(P); const loop = t.errors.find((e) => /loop/i.test(e.msg));
+  if (loop) { toast('Not changed: that would make a loop (' + loop.msg.replace(/^Logic loop:\s*/, '').replace(/\.\s*Remove.*$/, '') + ')'); return false; }
+  const n = want.size; setTimeout(() => toast(a.code + ' ' + (dir === 'p' ? 'predecessors' : 'successors') + ': ' + (n ? linksText(a, dir) : 'none')), 0);
 }
 function defaultActual(a, which) {
   // actuals default to the planned date, but never on/after the data date
@@ -1013,14 +1157,15 @@ function startEdit(td) {
   if (!td || !td.classList.contains('ed') || td.querySelector('input')) return;
   const id = td.parentElement.dataset.id, k = td.dataset.k, a = act(id); if (!a) return;
   const r = S.acts[id] || {};
-  const val = k === 'code' ? a.code : k === 'name' ? a.name : k === 'od' ? a.od : k === 'rd' ? a.rd : k === 'res' ? a.res : k === 'cost' ? (a.cost || '') : (r.status === 'done' ? 100 : a.pct);
+  const val = k === 'pred' || k === 'succ' ? linksText(a, k === 'pred' ? 'p' : 's') : k === 'code' ? a.code : k === 'name' ? a.name : k === 'od' ? a.od : k === 'rd' ? a.rd : k === 'res' ? a.res : k === 'cost' ? (a.cost || '') : (r.status === 'done' ? 100 : a.pct);
   const inp = document.createElement('input'); inp.className = 'cell'; inp.value = val; inp.spellcheck = k === 'name' || k === 'res';
   if (COLREG[k].ed === 'num') { inp.type = 'number'; inp.min = 0; if (k === 'pct') inp.max = 100; }
+  if (COLREG[k].ed === 'links') { inp.spellcheck = false; inp.placeholder = 'e.g. A1020, A1030 SS+3'; inp.setAttribute('aria-label', (k === 'pred' ? 'Predecessors' : 'Successors') + ' of ' + a.code + ': IDs separated by commas, optional type and lag'); }
   td.textContent = ''; td.appendChild(inp); inp.focus(); inp.select();
   let done = false;
   const finish = (save, move) => {
     if (done) return; done = true;
-    if (save && String(inp.value) !== String(val)) commit(() => setField(a, k, inp.value)); else render();
+    if (save && String(inp.value) !== String(val)) { if (commit(() => setField(a, k, inp.value)) === false) render(); } else render();
     if (move) {
       const cells = $$('#grid td.ed'); const cur = $('#grid tr[data-id="' + CSS.escape(id) + '"] td[data-k="' + k + '"]');
       const i = cells.indexOf(cur); const nx = cells[i + move]; if (nx) { ui.sel = nx.parentElement.dataset.id; markSel(); startEdit(nx); }
@@ -1076,7 +1221,7 @@ function select(id, scroll) {
 let modalReturn = null;
 function modal(title, body, foot) {
   if (!$('#ov').classList.contains('open')) modalReturn = document.activeElement;
-  $('#mTitle').textContent = title; $('#mBody').innerHTML = body; $('#mFoot').innerHTML = foot || '<button class="btn pri" data-close>Done</button>';
+  $('#mTitle').textContent = title; $('#mBody').innerHTML = body; $('#mFoot').innerHTML = foot === null ? '' : foot || '<button class="btn pri" data-close>Done</button>'; $('#mFoot').hidden = foot === null; $('.modal').classList.remove('cmdk');
   $('.modal').setAttribute('aria-labelledby', 'mTitle');
   $('#ov').classList.add('open');
   setTimeout(() => { const f = $('.modal .mb').querySelector('input:not([type=hidden]):not([disabled]),select,textarea,button:not([disabled])') || $('#mFoot .btn.pri') || $('#mClose'); if (f) f.focus(); }, 0);
@@ -1089,7 +1234,7 @@ document.addEventListener('keydown', (e) => {
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   else if (!$('.modal').contains(document.activeElement)) { e.preventDefault(); first.focus(); }
 });
-function closeModal() { $('.modal').style.width = ''; $('#ov').classList.remove('open'); $('#mBody').innerHTML = ''; modalHandler = null; if (modalReturn && document.contains(modalReturn)) { try { modalReturn.focus(); } catch (e) { /* ignore */ } } modalReturn = null; }
+function closeModal() { $('.modal').style.width = ''; $('.modal').classList.remove('cmdk'); $('#mFoot').hidden = false; $('.modal').classList.remove('cmdk'); $('#mFoot').hidden = false; $('#ov').classList.remove('open'); $('#mBody').innerHTML = ''; modalHandler = null; if (modalReturn && document.contains(modalReturn)) { try { modalReturn.focus(); } catch (e) { /* ignore */ } } modalReturn = null; }
 let modalHandler = null;
 function confirmBox(title, text, okLabel, fn) {
   modal(title, '<p style="margin:0;line-height:1.5">' + esc(text) + '</p>', '<button class="btn" data-close>Cancel</button><button class="btn pri" id="cOk">' + esc(okLabel) + '</button>');
@@ -1109,7 +1254,8 @@ const KEYS = [
   ['Enter / Tab / Shift+Tab', 'Save the cell / save and move to the next or previous cell'],
   ['Delete', 'Delete the selected activity (Undo brings it back)'],
   ['Ctrl+Z / Ctrl+Y', 'Undo / redo'],
-  ['/', 'Search activities'],
+  ['Ctrl+K', 'Go to anything: any command or activity'],
+  ['/', 'Filter the activity list'],
   ['Ctrl+S', 'Save the project file'],
   ['Ctrl+P', 'Print / PDF'],
   ['Esc', 'Cancel an edit, close the panel or dialog'],
@@ -1118,6 +1264,173 @@ const KEYS = [
 function showKeys() {
   modal('Keyboard shortcuts', '<table class="kbd-tbl">' + KEYS.map(([k, d]) => '<tr><td>' + k.split(/( \/ | or |, )/).map((p) => /^( \/ | or |, )$/.test(p) ? esc(p) : '<kbd>' + esc(p) + '</kbd>').join('') + '</td><td>' + esc(d) + '</td></tr>').join('') + '</table>'
     + '<p class="hint">On a Mac, use ⌘ in place of Ctrl.</p>');
+}
+// ---------- Update progress: one screen with only the work that should have moved since the last update
+function showProgress() {
+  const nextDD = () => { const t = today(); return t > P.dataDate ? t : CPM.toIso(CPM.toDn(P.dataDate) + 7); };
+  let nd = nextDD(); const edits = new Map(); // id -> {st, as, af, rd}
+  const isMs = (a) => a.type !== 'task';
+  const listFor = () => {
+    const ndP = CPM.toDn(nd);
+    return P.activities.map((a) => ({ a, r: S.acts[a.id] })).filter(({ r }) => r && r.status !== 'done' && (r.status === 'active' || r.esP < ndP))
+      .sort((x, y) => x.r.esP - y.r.esP || x.a.code.localeCompare(y.a.code));
+  };
+  const stateOf = (a, r) => edits.get(a.id) || (r.status === 'active' ? { st: 'started', as: a.as, af: '', rd: a.rd } : { st: 'none', as: '', af: '', rd: a.od });
+  const lastWork = (a) => CPM.toIso(engCal(a).add(CPM.toDn(nd), -1));
+  const clampPast = (a, iso) => (iso && iso < nd ? iso : lastWork(a));
+  const asPlanned = (a, r) => {
+    const ndP = CPM.toDn(nd); const as = a.as || clampPast(a, r.es);
+    if (r.efP <= ndP) return { st: 'done', as: a.type === 'finish' ? '' : as, af: a.type === 'start' ? '' : clampPast(a, r.ef), rd: 0 };
+    if (isMs(a)) return stateOf(a, r);
+    return { st: 'started', as, af: '', rd: Math.max(1, engCal(a).between(ndP, r.efP)) };
+  };
+  const rowHtml = (a, r) => {
+    const s = stateOf(a, r); const ms = isMs(a);
+    const opts = ms ? [['none', 'Not yet'], ['done', 'Done']] : [['none', 'Not started'], ['started', 'Started'], ['done', 'Done']];
+    let f = '';
+    if (s.st === 'started') f = '<label class="f">Started<input class="inp" type="date" data-pg="as" value="' + esc(s.as) + '"></label><label class="f">Days left<input class="inp" type="number" min="0" data-pg="rd" value="' + s.rd + '"></label>';
+    if (s.st === 'done') f = (a.type !== 'finish' ? '<label class="f">' + (ms ? 'Date' : 'Started') + '<input class="inp" type="date" data-pg="as" value="' + esc(s.as) + '"></label>' : '')
+      + (a.type !== 'start' ? '<label class="f">' + (ms ? 'Date' : 'Finished') + '<input class="inp" type="date" data-pg="af" value="' + esc(s.af) + '"></label>' : '');
+    return '<div class="pg-t"><b>' + esc(a.code) + '</b> ' + esc(a.name) + '<small>Planned ' + (ms ? fmt(a.type === 'start' ? r.es : r.ef) : fmt(r.status === 'active' ? a.as : r.es) + ' → ' + fmt(r.ef)) + (r.critical ? ' · <span class="neg">critical</span>' : '') + '</small></div>'
+      + '<div class="seg" role="group" aria-label="Status of ' + esc(a.code) + '">' + opts.map(([k, l]) => '<button type="button" data-pst="' + k + '" class="' + (s.st === k ? 'on' : '') + '" aria-pressed="' + (s.st === k) + '">' + l + '</button>').join('') + '</div>'
+      + '<div class="pg-f">' + f + '</div>';
+  };
+  const applyTo = (p) => {
+    p.dataDate = nd;
+    for (const [id, s] of edits) {
+      const a = p.activities.find((x) => x.id === id); if (!a) continue;
+      if (s.st === 'none') { a.as = a.af = ''; a.pct = 0; a.rd = a.od; }
+      else if (s.st === 'started') { a.as = dt(s.as); a.af = ''; a.rd = int(s.rd, 0, 99999, a.od); a.pct = a.od ? Math.max(1, Math.min(99, Math.round(100 * (1 - a.rd / a.od)))) : 1; }
+      else { if (a.type === 'task') { a.af = dt(s.af); a.as = dt(s.as) || a.af; a.pct = 100; a.rd = 0; } else if (a.type === 'start') a.as = dt(s.as); else a.af = dt(s.af); }
+    }
+  };
+  const problems = () => {
+    const out = [];
+    for (const [id, s] of edits) {
+      const a = act(id); if (!a || s.st === 'none') continue;
+      const need = s.st === 'started' || a.type !== 'finish' ? 'as' : 'af';
+      if (!dt(s[need]) || (s.st === 'done' && a.type === 'task' && !dt(s.af))) { out.push(a.code + ' needs a date'); continue; }
+      for (const k of ['as', 'af']) if (s[k] && s[k] >= nd) out.push(a.code + ': ' + (k === 'as' ? 'start' : 'finish') + ' date must be before the data date');
+      if (s.st === 'done' && a.type === 'task' && s.as && s.af && s.af < s.as) out.push(a.code + ': finish is before start');
+    }
+    return out;
+  };
+  const preview = () => {
+    const bad = problems(); const go = $('#pgGo'); if (go) go.disabled = !!bad.length;
+    const el = $('#pgPrev'); if (!el) return;
+    if (bad.length) { el.innerHTML = '<span class="neg">' + esc(bad[0]) + (bad.length > 1 ? ' (+' + (bad.length - 1) + ' more)' : '') + '</span>'; return; }
+    try {
+      const c = JSON.parse(JSON.stringify(P)); applyTo(c); const t = CPM.schedule(c);
+      const v = CPM.makeCal(calById(P.defaultCal)).between(S.finishP, t.finishP);
+      el.innerHTML = 'Finish ' + esc(fmt(S.finish)) + (v ? ' → <b class="' + (v > 0 ? 'neg' : 'pos') + '">' + esc(fmt(t.finish)) + '</b> (' + (v > 0 ? v + ' day' + (v > 1 ? 's' : '') + ' later' : -v + ' day' + (v < -1 ? 's' : '') + ' earlier') + ')' : ' stays the same');
+    } catch (e) { el.textContent = ''; }
+  };
+  const draw = () => {
+    const list = listFor();
+    $('#mBody').innerHTML = '<div class="pg-top"><label class="f">New data date<input class="inp" type="date" id="pgDD" value="' + nd + '"></label>'
+      + '<p class="hint" style="margin:0;flex:1">Showing the ' + list.length + ' activit' + (list.length === 1 ? 'y' : 'ies') + ' that should have started by this date. Everything else is unchanged.</p>'
+      + (list.length ? '<button class="btn sm" id="pgPlan">Fill in as planned</button>' : '') + '</div>'
+      + (list.length ? list.map(({ a, r }) => '<div class="pg-row" data-pid="' + esc(a.id) + '">' + rowHtml(a, r) + '</div>').join('')
+        : '<div class="empty" style="padding:28px 12px">Nothing was planned to start by this date. Apply to just move the data date.</div>');
+    preview();
+  };
+  modal('Update progress', '', '<span id="pgPrev" class="pg-prev"></span><button class="btn" data-close>Cancel</button><button class="btn pri" id="pgGo">Apply update</button>');
+  $('.modal').style.width = 'min(820px,100%)'; draw();
+  modalHandler = (e) => {
+    const t = e.target;
+    if (e.type === 'change' && t.id === 'pgDD') { const v = dt(t.value); if (v) { nd = v; draw(); } return; }
+    if (e.type === 'click' && t.id === 'pgPlan') { for (const { a, r } of listFor()) edits.set(a.id, asPlanned(a, r)); draw(); toast('Filled in as planned. Adjust anything that went differently.'); return; }
+    if (e.type === 'click' && t.id === 'pgGo') {
+      if (problems().length) return;
+      const n = [...edits.values()].length;
+      commit(() => applyTo(P)); closeModal();
+      toast('Updated to ' + fmt(nd) + (n ? ': ' + n + ' activit' + (n === 1 ? 'y' : 'ies') + ' changed' : ''), { label: 'Undo', fn: doUndo });
+      return;
+    }
+    const row = t.closest('[data-pid]'); if (!row) return; const a = act(row.dataset.pid), r = S.acts[a.id];
+    const st = t.closest('[data-pst]');
+    if (e.type === 'click' && st) {
+      const prev = stateOf(a, r); const want = st.dataset.pst; let s = { ...prev, st: want };
+      if (want !== 'none') { const pl = asPlanned(a, r); if (!s.as) s.as = pl.as || clampPast(a, r.es); if (want === 'done' && !s.af) s.af = pl.af || lastWork(a); if (want === 'started' && (!s.rd || prev.st !== 'started')) s.rd = pl.st === 'started' ? pl.rd : Math.max(1, Math.round(a.od / 2)); }
+      edits.set(a.id, s); row.innerHTML = rowHtml(a, r); preview(); return;
+    }
+    if (e.type === 'change' && t.dataset.pg) { const s = { ...stateOf(a, r) }; s[t.dataset.pg] = t.dataset.pg === 'rd' ? int(t.value, 0, 99999, s.rd) : t.value; edits.set(a.id, s); preview(); }
+  };
+}
+// ---------- Command search (Ctrl+K): type to find any action or activity
+function commands() {
+  const C = (label, run, kw = '', key = '') => ({ label, run, kw, key });
+  const setv = (k, v) => () => { ui[k] = v; if (k === 'filter' || k === 'q') ui.collapsed.clear(); render(); if (k === 'zoom') scrollToDataDate(); };
+  const list = [
+    C('Add activity', () => addActivity('task'), 'new task insert create', 'Insert'),
+    C('Add milestone', () => addActivity('finish'), 'new create diamond'),
+    C('Update progress', showProgress, 'status data date actuals percent complete weekly'),
+    C('Schedule check', showCheck, 'errors warnings problems issues loops open ends'),
+    C('Baseline', showBaseline, 'target save compare variance'),
+    C('Calendars & holidays', showCalendars, 'work days non-work holiday weekend'),
+    C('Project settings & WBS', showProject, 'name start date must finish groups wbs critical threshold'),
+    C('Format bars', showBars, 'colors gantt style preset row height text size'),
+    C('Columns', showColumns, 'fields show hide table'),
+    C('Spelling', showSpelling, 'spell check dictionary typos'),
+    C('Print / PDF', showPrint, 'export paper tabloid', 'Ctrl+P'),
+    C('Save project file', () => saveFile(fileName('json'), JSON.stringify(P, null, 1)), 'download json', 'Ctrl+S'),
+    C('Open project file', () => $('#fileIn').click(), 'load import json'),
+    C('Export to Excel (CSV)', () => saveFile(fileName('csv'), toCsv()), 'csv spreadsheet download'),
+    C('New blank project', () => confirmBox('Start a new project?', 'The current project will be replaced. Save it first if you want to keep it.', 'New project', () => { load(blank()); toast('New project'); }), 'empty'),
+    C('Load sample project', () => confirmBox('Load the sample project?', 'The current project will be replaced. Save it first if you want to keep it.', 'Load sample', () => { load(sample()); toast('Sample loaded'); }), 'example demo elevator'),
+    C('Show table only', setv('view', 'table'), 'view'), C('Show table and Gantt', setv('view', 'both'), 'view split'), C('Show Gantt only', setv('view', 'gantt'), 'view chart'),
+    C('Zoom to days', setv('zoom', 'day'), 'timescale'), C('Zoom to weeks', setv('zoom', 'week'), 'timescale'), C('Zoom to months', setv('zoom', 'month'), 'timescale'),
+    C('Show all activities', () => { ui.q = ''; $('#q').value = ''; setv('filter', 'all')(); }, 'filter clear reset'),
+    C('Show critical activities', setv('filter', 'crit'), 'filter critical path'),
+    C('Show incomplete activities', setv('filter', 'open'), 'filter remaining open'),
+    C('Show activities with issues', setv('filter', 'issues'), 'filter problems'),
+    C((P.layout.links ? 'Hide' : 'Show') + ' logic lines', () => commit(() => { P.layout.links = !P.layout.links; }), 'relationships arrows toggle'),
+    C((P.layout.bars.float.show ? 'Hide' : 'Show') + ' float bars', () => commit(() => { P.layout.bars.float.show = !P.layout.bars.float.show; }), 'toggle slack'),
+    C((P.layout.bars.target.show ? 'Hide' : 'Show') + ' baseline bars', () => commit(() => { P.layout.bars.target.show = !P.layout.bars.target.show; }), 'toggle target'),
+    C('Go to data date', scrollToDataDate, 'scroll today timeline'),
+    C('Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme', () => $('#bTheme').click(), 'colors appearance mode'),
+    C('Keyboard shortcuts', showKeys, 'keys help hotkeys', '?'),
+  ];
+  if (undo.length) list.splice(0, 0, C('Undo', doUndo, 'revert back', 'Ctrl+Z'));
+  if (aiSample) list.push(C('Open the schedule assistant', () => aiOpen(true), 'ai ask claude help'));
+  return list;
+}
+function showCmd() {
+  const cmds = commands(); let items = [], cur = 0;
+  const norm = (x) => String(x).toLowerCase();
+  const find = (q) => {
+    const toks = norm(q).split(/\s+/).filter(Boolean);
+    // every typed word must start a word in the text (so “cal” finds Calendars, not “critical”)
+    const hit = (txt) => { const words = txt.split(/[^a-z0-9]+/).filter(Boolean); return toks.every((t) => words.some((w) => w.startsWith(t))); };
+    const cs = cmds.filter((c) => !toks.length || hit(norm(c.label + ' ' + c.kw))).map((c) => ({ ...c, kind: 'cmd', score: norm(c.label).startsWith(toks[0] || '') ? 0 : 1 })).sort((a, b) => a.score - b.score);
+    const as = !toks.length ? [] : P.activities.filter((a) => hit(norm(a.code + ' ' + a.name))).map((a) => ({ kind: 'act', a, label: a.code + '  ' + a.name, score: norm(a.code).startsWith(toks[0]) ? 0 : 1 })).sort((x, y) => x.score - y.score || x.a.code.localeCompare(y.a.code)).slice(0, 8);
+    const out = [...cs.slice(0, toks.length ? 6 : 9), ...as];
+    if (aiSample && toks.length) out.push({ kind: 'ai', label: 'Ask the assistant: “' + q.trim() + '”', q: q.trim() });
+    return out;
+  };
+  const draw = (q) => {
+    items = find(q); cur = Math.min(cur, Math.max(0, items.length - 1));
+    $('#cmdList').innerHTML = items.length ? items.map((x, i) => '<li role="option" id="cmd' + i + '" data-ci="' + i + '" aria-selected="' + (i === cur) + '" class="' + (i === cur ? 'on' : '') + '">'
+      + (x.kind === 'act' ? '<span class="ck">Go to</span><b>' + esc(x.a.code) + '</b> ' + esc(x.a.name) : x.kind === 'ai' ? '<span class="ck">Ask</span>' + esc(x.label.replace(/^Ask the assistant: /, '')) : esc(x.label))
+      + (x.key ? '<kbd>' + esc(x.key) + '</kbd>' : '') + '</li>').join('') : '<li class="cmd-none">No matches. Try another word, like “calendar” or an activity ID.</li>';
+    $('#cmdIn').setAttribute('aria-activedescendant', items.length ? 'cmd' + cur : '');
+    const on = $('#cmdList li.on'); if (on) on.scrollIntoView({ block: 'nearest' });
+  };
+  const run = (x) => {
+    if (!x) return; closeModal();
+    if (x.kind === 'act') { const a = x.a; if (!rows.some((r) => r.a && r.a.id === a.id)) { ui.filter = 'all'; ui.q = ''; $('#q').value = ''; ui.collapsed.delete(a.wbs); } select(a.id, true); }
+    else if (x.kind === 'ai') { aiOpen(true); aiSend(x.q); }
+    else x.run();
+  };
+  modal('Go to anything', '<input class="inp cmd-in" id="cmdIn" placeholder="Type a command or an activity ID / name" role="combobox" aria-expanded="true" aria-controls="cmdList" aria-autocomplete="list" autocomplete="off" spellcheck="false"><ul class="cmd-list" id="cmdList" role="listbox" aria-label="Results"></ul>', null);
+  $('.modal').classList.add('cmdk'); draw('');
+  const inp = $('#cmdIn'); inp.focus();
+  inp.addEventListener('input', () => { cur = 0; draw(inp.value); });
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (items.length) { cur = (cur + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length; draw(inp.value); } }
+    else if (e.key === 'Enter') { e.preventDefault(); run(items[cur]); }
+  });
+  modalHandler = (e) => { const li = e.target.closest('[data-ci]'); if (e.type === 'click' && li) run(items[+li.dataset.ci]); };
 }
 function showCheck() {
   const items = [...S.errors.map((e) => ({ ...e, k: 'e' })), ...S.warnings.map((w) => ({ ...w, k: 'w' }))];
@@ -2010,7 +2323,12 @@ $('#dBody').addEventListener('click', (e) => {
   if (k === 'start') commit(() => { a.as = defaultActual(a, 'start'); if (a.type === 'task' && !a.pct) a.pct = 1; a.rd = a.od; });
   if (k === 'finish') commit(() => { if (a.type !== 'finish' && !a.as) a.as = defaultActual(a, 'start'); if (a.type !== 'start') a.af = defaultActual(a, 'finish'); if (a.as && a.af && a.af < a.as) a.af = a.as; a.pct = 100; a.rd = 0; });
   if (k === 'reset') commit(() => { a.as = a.af = ''; a.pct = 0; a.rd = a.od; });
+  if (t.closest('[data-whyall]')) { ui.whyAll = a.id; renderDetail(); return; }
   if (k === 'del') delActivity(a.id);
+  if (k === 'recover') {
+    const path = drivingPath(a.id).map((x) => x.a.code).join(' ← ');
+    aiOpen(true); aiSend(a.code + ' (' + a.name + ') is ' + (slipDays(a) || 0) + ' days behind the baseline. Its driving path is ' + path + '. Suggest practical ways to recover the time (overlaps, shorter durations, resequencing) and propose the changes so I can review them.');
+  }
   if (k === 'dup') { const c = { ...a, id: uid(), code: nextCode(), name: a.name + ' (copy)', as: '', af: '', pct: 0, rd: a.od }; commit(() => P.activities.push(c)); select(c.id, true); }
 });
 $('#dClose').onclick = () => { ui.sel = null; render(); };
@@ -2021,7 +2339,7 @@ $('#dPrev').onclick = () => step(-1); $('#dNext').onclick = () => step(1);
 $('#bAdd').onclick = () => addActivity('task');
 $('#bAddMs').onclick = () => addActivity('finish');
 $('#bUndo').onclick = doUndo; $('#bRedo').onclick = doRedo;
-$('#bCheck').onclick = showCheck; $('#bBaseline').onclick = showBaseline; $('#bCal').onclick = showCalendars; $('#bProj').onclick = showProject; $('#bFile').onclick = showFile; $('#bPrint').onclick = showPrint; $('#bBars').onclick = showBars; $('#bCols').onclick = showColumns;
+$('#bCmd').onclick = showCmd; $('#bProg').onclick = showProgress; $('#bCheck').onclick = showCheck; $('#bBaseline').onclick = showBaseline; $('#bCal').onclick = showCalendars; $('#bProj').onclick = showProject; $('#bFile').onclick = showFile; $('#bPrint').onclick = showPrint; $('#bBars').onclick = showBars; $('#bCols').onclick = showColumns;
 $('#pname').addEventListener('change', (e) => commit(() => { P.name = str(e.target.value, 120) || 'Untitled project'; }));
 $('#dd').addEventListener('change', (e) => { const v = dt(e.target.value); if (v) commit(() => { P.dataDate = v; }); });
 $('#q').addEventListener('input', (e) => { ui.q = e.target.value; render(); });
@@ -2058,6 +2376,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { if ($('#ov').classList.contains('open')) closeModal(); else if (ui.ai) aiOpen(false); else if (ui.sel && !inField) { ui.sel = null; render(); } return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !inField) { e.preventDefault(); e.shiftKey ? doRedo() : doUndo(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y' && !inField) { e.preventDefault(); doRedo(); return; }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if ($('.modal').classList.contains('cmdk') && $('#ov').classList.contains('open')) closeModal(); else { if ($('#ov').classList.contains('open')) closeModal(); showCmd(); } return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') { e.preventDefault(); showPrint(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveFile(fileName('json'), JSON.stringify(P, null, 1)); return; }
   if (inField || $('#ov').classList.contains('open')) return;

@@ -161,17 +161,21 @@
         R.set(id, r); continue;
       }
       let esC = floor, efC = -Infinity;
+      // candidate reasons for the (remaining) start, so the app can explain what drives each activity
+      const impS = (v) => (dur > 0 ? cal.snapF(v) : v), impF = (v) => (dur > 0 ? cal.snapF(cal.add(v, -dur)) : v);
+      const cands = [{ kind: dd != null && floor === dd ? 'datadate' : 'projectstart', imp: impS(floor), rank: 2 }];
       for (const l of preds.get(id)) {
         const P = R.get(l.from); if (!P) continue;
-        const pc = P.cal;
-        if (l.type === 'FS') esC = Math.max(esC, pc.add(P.ef, l.lag));
-        else if (l.type === 'SS') esC = Math.max(esC, pc.add(P.es0, l.lag));
-        else if (l.type === 'FF') efC = Math.max(efC, pc.add(P.ef, l.lag));
-        else efC = Math.max(efC, pc.add(P.es0, l.lag));
+        const pc = P.cal; let v;
+        if (l.type === 'FS') { v = pc.add(P.ef, l.lag); esC = Math.max(esC, v); }
+        else if (l.type === 'SS') { v = pc.add(P.es0, l.lag); esC = Math.max(esC, v); }
+        else if (l.type === 'FF') { v = pc.add(P.ef, l.lag); efC = Math.max(efC, v); }
+        else { v = pc.add(P.es0, l.lag); efC = Math.max(efC, v); }
+        cands.push({ kind: 'rel', rel: l.id, from: l.from, type: l.type, lag: l.lag, imp: l.type === 'FS' || l.type === 'SS' ? impS(v) : impF(v), rank: P.status === 'done' ? 3 : 0 });
       }
       const cd = isIso(a.cDate) ? toDn(a.cDate) : null;
-      if (cd != null && a.cType === 'SNET') esC = Math.max(esC, cd);
-      if (cd != null && a.cType === 'FNET') efC = Math.max(efC, cd + 1);
+      if (cd != null && a.cType === 'SNET') { esC = Math.max(esC, cd); cands.push({ kind: 'constraint', cType: 'SNET', imp: impS(cd), rank: 1 }); }
+      if (cd != null && a.cType === 'FNET') { efC = Math.max(efC, cd + 1); cands.push({ kind: 'constraint', cType: 'FNET', imp: impF(cd + 1), rank: 1 }); }
       let s, f;
       if (cd != null && a.cType === 'MSO') { s = dur ? cal.snapF(cd) : cd; f = cal.add(s, dur); }
       else if (cd != null && a.cType === 'MFO') { f = dur ? cal.snapB(cd + 1) : cd + 1; s = cal.add(f, -dur); }
@@ -181,6 +185,11 @@
         f = cal.add(s, dur);
       } else { s = f = Math.max(esC, efC); }
       r.rs = s; r.ef = f;
+      if (cd != null && (a.cType === 'MSO' || a.cType === 'MFO')) r.driver = { kind: 'constraint', cType: a.cType };
+      else {
+        const bind = cands.filter((c) => c.imp === s).sort((x, y) => x.rank - y.rank)[0] || cands.sort((x, y) => y.imp - x.imp)[0];
+        r.driver = { ...bind }; delete r.driver.imp; delete r.driver.rank;
+      }
       if (status === 'active') { r.es = toDn(a.as); if (dd != null && r.es >= dd) warnings.push({ msg: a.code + ': actual start is on/after the data date.', ids: [id] }); }
       else r.es = s;
       r.es0 = status === 'active' ? r.rs : r.es;
@@ -251,6 +260,7 @@
           ls: r.status === 'done' ? '' : show(r.ls, false), lf: r.status === 'done' ? '' : show(r.lf, true),
           tf: r.status === 'done' ? null : r.tf, ff: r.status === 'done' ? null : r.ff,
           esP: r.es, efP: r.ef, rsP: r.rs, lsP: r.ls, lfP: r.lf, loop: loopIds.has(id),
+          driver: r.status === 'done' ? { kind: 'done' } : r.driver || { kind: 'none' },
         };
         if (r.status !== 'done' && r.tf < 0) warnings.push({ msg: a.code + ' has negative float (' + r.tf + 'd) — a constraint or finish date cannot be met.', ids: [id] });
       }
@@ -273,6 +283,27 @@
     }
   }
 
-  const api = { schedule, makeCal, toDn, toIso, isIso, weekday, HOLIDAYS, DEFAULT_HOLIDAYS, ruleDates };
+  // Parse SureTrak-style link text: "A1020, A1030 SS+3, A1040 FF -2, A1050+1" -> [{ code, type, lag }].
+  // isCode (optional) says whether a string is an existing activity ID, so IDs like "CAR-100" are not read as a lag.
+  // Throws an Error with a plain-language message when an entry can't be read.
+  function parseLinks(text, isCode) {
+    const out = [];
+    for (const raw of String(text || '').split(/[,;\n]+/)) {
+      const t = raw.trim().replace(/\s+/g, ' '); if (!t) continue;
+      if (isCode && isCode(t)) { out.push({ code: t, type: 'FS', lag: 0 }); continue; }
+      let rest = t, lag = 0, type = 'FS';
+      const lm = /^(.*?)\s*([+-])\s*(\d+)\s*d?$/i.exec(rest);
+      if (lm && lm[1] && !(isCode && isCode(rest))) { rest = lm[1]; lag = (lm[2] === '-' ? -1 : 1) * parseInt(lm[3], 10); }
+      const tm = /^(.*\S)\s+(FS|SS|FF|SF)$/i.exec(rest);
+      if (tm) { rest = tm[1]; type = tm[2].toUpperCase(); }
+      const code = rest.trim();
+      if (!code || /\s/.test(code)) throw new Error('Could not read “' + t + '”. Write an ID, then optionally a type and lag, e.g. A1020 SS+3.');
+      if (Math.abs(lag) > 9999) throw new Error('The lag in “' + t + '” is too large.');
+      out.push({ code, type, lag });
+    }
+    return out;
+  }
+
+  const api = { schedule, makeCal, toDn, toIso, isIso, weekday, HOLIDAYS, DEFAULT_HOLIDAYS, ruleDates, parseLinks };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.CPM = api;
 })(typeof self !== 'undefined' ? self : this);
