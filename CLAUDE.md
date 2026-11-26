@@ -39,6 +39,17 @@ AI should feel like part of the app, not a separate chatbot: reduce repetitive w
 
 Time to complete the task · number of interactions · ease of learning · error prevention · visual clarity · accessibility · user confidence · scheduling accuracy · overall productivity.
 
+## Design system
+
+The visual rules live in the OpenTrak design system (https://claude.ai/artifact/1xezTxVZBu8Ld4E67crD4u): brand book, tokens for both themes, and component guidelines. In code, every token is a CSS custom property prefixed `--ot-` defined once at the top of `src/app.html` (`surface` → `--ot-surface`). Older variable names (`--panel`, `--line`, `--muted`…) are aliases of those tokens.
+
+- Use tokens, never raw hex, in new UI. Chrome stays graphite; color only for meaning (critical, warning, success) and cobalt only for focus, selection, the primary action and the data date.
+- One filled primary button per view. Everything else is an outlined or ghost button, a menu item or a link.
+- Status is text in the status line, not pills. Secondary options go in a menu (`.menu-wrap` + `menuToggle`), one level deep.
+- Four type sizes (16 / 13 / 12 / 11), three weights (400 / 500 / 600), tabular figures, sentence case.
+- Hairlines (`border`, `border-subtle`) separate regions; shadows only on menus and dialogs.
+- Check both themes and phone width (390px) for every change; keep axe-core WCAG 2.2 AA clean, including 24px click targets.
+
 ## Repo conventions
 
 - `src/engine.js` is the pure CPM engine (no DOM). Add engine tests to `test/engine.test.js` for any scheduling change; `npm test` must pass.
