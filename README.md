@@ -21,9 +21,16 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Gantt chart with critical path, progress, float, baselines and logic lines
 - Drag from a bar's end to another bar to link them, or drag a bar's edge to change its duration
 - Detail panel for dates, progress, constraints, predecessors and successors (with driving links marked) and notes
+- **Why these dates:** the detail panel traces the driving path back to where it starts, says how far the activity is behind the baseline, and names the activities that caused the delay (e.g. "duration grew from 45 to 50 days, +10d"). In the Claude-hosted version, **Suggest ways to recover** hands that path to the assistant
+- **Update progress:** pick a new data date and see only the work that should have started by then. Mark each one Not started / Started / Done, or click **Fill in as planned** and adjust what went differently. A live preview shows how the finish date moves before you apply, and the whole update undoes in one step
+- **Type links in the table:** the Predecessors and Successors columns are editable, SureTrak style: `A1020, A1030 SS+3, A1040 FF-2`. Unknown IDs and loops are rejected with a clear message
+- **Go to anything (Ctrl+K):** type any command ("calendar", "baseline", "update") or an activity ID or name and press Enter
 - Schedule check for logic loops, open ends, negative float, out-of-sequence progress and bad actual dates
 - Baseline (target) with a variance column and a finish variance in the toolbar
 - Filters (critical, incomplete, issues), search, Day/Week/Month zoom, undo and redo
+- Deletes and bar drags happen immediately with an **Undo** button in the confirmation message, instead of "are you sure?" dialogs
+- Dragging a bar's edge shows the new duration and finish date as you drag
+- The autosave status under the project name only says "Autosaved" when the save actually worked, and warns if the browser blocks storage
 
 **Formatting** (saved with the project)
 - Format Bars: color, thickness and position for each bar type; milestone shapes; bar labels; row height and text size
@@ -51,10 +58,13 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 
 | Key | Action |
 |---|---|
-| Insert or Ctrl+Enter | Add an activity after the selected one |
+| Insert or Ctrl+Enter | Add an activity after the selected one, linked to it |
 | ↑ / ↓ | Move the selection |
 | F2 | Rename the selected activity |
-| Delete | Delete the selected activity (asks first) |
+| Delete | Delete the selected activity (Undo in the message brings it back) |
+| Ctrl+K | Go to anything: any command or activity |
+| / | Jump to the activity filter (Esc clears it) |
+| ? | Show all keyboard shortcuts |
 | Ctrl+Z / Ctrl+Y | Undo / redo |
 | Ctrl+S | Save the project file |
 | Ctrl+P | Print / PDF |

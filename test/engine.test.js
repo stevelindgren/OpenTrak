@@ -91,4 +91,26 @@ t('recurring holidays push dates in any year', () => {
   assert.equal(C.toIso(cal.add(C.toDn('2031-01-17'), 2) - 1), '2031-01-21');
   assert(!cal.isWork(C.toDn('2030-11-05')) && !cal.isWork(C.toDn('2030-11-11')) && !cal.isWork(C.toDn('2030-10-14')));
 });
+t('driver: predecessor, constraint, data date', () => {
+  const r = run([A('A', 5), A('B', 3), A('C', 2, { cType: 'SNET', cDate: '2026-11-20' }), A('D', 2)], [L('A','B'), L('A','C'), L('B','D')]);
+  assert.equal(r.acts.A.driver.kind, 'datadate');
+  assert.equal(r.acts.B.driver.kind, 'rel'); assert.equal(r.acts.B.driver.from, 'A');
+  assert.equal(r.acts.C.driver.kind, 'constraint'); assert.equal(r.acts.C.driver.cType, 'SNET');
+  assert.equal(r.acts.D.driver.from, 'B');
+});
+t('driver: the later of two predecessors, FF link, done predecessor', () => {
+  const r = run([A('A', 5), A('B', 8), A('C', 2), A('D', 6)], [L('A','C'), L('B','C'), L('B','D','FF',0)]);
+  assert.equal(r.acts.C.driver.from, 'B'); assert.equal(r.acts.D.driver.type, 'FF');
+  const r2 = run([A('A', 2, { as: '2026-10-26', af: '2026-10-27', pct: 100, rd: 0 }), A('B', 3)], [L('A','B')]);
+  assert.equal(r2.acts.A.driver.kind, 'done'); assert.equal(r2.acts.B.driver.kind, 'datadate');
+});
+t('parseLinks reads SureTrak-style link text', () => {
+  const codes = new Set(['A1020', 'A1030', 'CAR-100']); const is = (c) => codes.has(c);
+  assert.deepEqual(C.parseLinks('A1020, A1030 SS+3; A1040 FF -2, A1050+1, A1060 sf', is), [
+    { code: 'A1020', type: 'FS', lag: 0 }, { code: 'A1030', type: 'SS', lag: 3 }, { code: 'A1040', type: 'FF', lag: -2 },
+    { code: 'A1050', type: 'FS', lag: 1 }, { code: 'A1060', type: 'SF', lag: 0 }]);
+  assert.deepEqual(C.parseLinks('CAR-100, CAR-100 SS-2', is), [{ code: 'CAR-100', type: 'FS', lag: 0 }, { code: 'CAR-100', type: 'SS', lag: -2 }]);
+  assert.deepEqual(C.parseLinks('  '), []);
+  assert.throws(() => C.parseLinks('A1020 SS SS'), /Could not read/);
+});
 console.log(n, 'tests passed');
