@@ -235,6 +235,30 @@ textarea.inp{height:auto;min-height:70px;padding:8px 9px;resize:vertical}
 .toast .tact{border:0;background:transparent;color:var(--accent-fg);font-weight:600;padding:2px 4px;border-radius:5px}
 .toast .tact:hover{background:var(--tint-accent)}
 .subline-bad{color:var(--bad)!important}
+.np{display:flex;flex-direction:column;gap:14px}
+.np .f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)} .np .f>span{font-size:12px;color:var(--muted)} .np .seg{align-self:flex-start}
+.np-name input{height:40px;font-size:15px}
+.np-err{color:var(--bad);font-size:12px;min-height:0} .np-err:empty{display:none}
+.np-opt{font-style:normal;font-weight:400;color:var(--muted);margin-left:4px}
+.np-line{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+.np-from{border:0;margin:0;padding:0} .np-from legend{font-size:12px;color:var(--muted);padding:0;margin-bottom:6px}
+.np-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.np-card{display:flex;gap:9px;align-items:flex-start;padding:11px 12px;border:1px solid var(--field-line);border-radius:10px;background:var(--field);cursor:pointer;transition:border-color .12s,background .12s}
+.np-card:hover{border-color:var(--faint)}
+.np-card:has(input:checked){border-color:var(--accent-fg);background:var(--tint-accent);box-shadow:0 0 0 1px var(--accent-fg) inset}
+.np-card:has(input:focus-visible){outline:2px solid var(--accent-fg);outline-offset:2px}
+.np-card input{margin:2px 0 0;accent-color:var(--accent)}
+.np-card b{display:block;font-size:13px;font-weight:600} .np-card small{display:block;color:var(--muted);font-size:11.5px;line-height:1.35;margin-top:2px}
+.np-opts{padding:12px;border:1px solid var(--line-2);border-radius:10px;background:var(--panel-2);display:flex;flex-direction:column;gap:10px}
+.np-opts:empty{display:none}
+.np-opts .np-line{grid-template-columns:140px 1fr}
+.np-durs summary{cursor:pointer;font-size:12.5px}
+.np-dgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-top:10px}
+.np-d{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--text)} .np-d input{width:64px;height:28px;text-align:right}
+.np-ok{margin:0;font-size:12.5px;line-height:1.5}
+.np-sum{margin-right:auto;font-size:12.5px;color:var(--muted);align-self:center}
+.np-sum b{color:var(--text);font-weight:600}
+@media (max-width:640px){.np-line,.np-opts .np-line{grid-template-columns:1fr}.np-cards{grid-template-columns:1fr}.np-dgrid{grid-template-columns:1fr}.mf{flex-wrap:wrap}.np-sum{flex-basis:100%;order:-1;margin-bottom:4px}}
 .modal.pv{width:min(1500px,100%);height:94vh;max-height:94vh}
 .modal.pv .mb{padding:0;flex:1;min-height:0;overflow:hidden;display:flex}
 .pv-wrap{display:grid;grid-template-columns:300px 1fr;flex:1;min-height:0}
@@ -1470,11 +1494,12 @@ function renderTable() {
   const root = document.documentElement; root.style.setProperty('--row', P.layout.rowH + 'px'); root.style.setProperty('--fs', P.layout.fontSize + 'px');
   let h = '<colgroup>' + cs.map((c) => '<col data-k="' + c.k + '" style="width:' + c.w + 'px">').join('') + '</colgroup><thead><tr>'
     + cs.map((c) => '<th scope="col" class="' + (c.n ? 'n' : '') + '" data-k="' + c.k + '">' + esc(c.l) + '<span class="rz" data-rz="' + c.k + '" title="Drag to resize"></span></th>').join('') + '</tr></thead><tbody>';
-  if (!rows.length) {
+  const noActs = !P.activities.length; let emptyRow = '';
+  if (!rows.length || noActs) {
     const msg = !P.activities.length ? 'No activities yet. Click <b>＋ Activity</b> or press <kbd>Insert</kbd> to add the first one.'
       : ui.filter === 'issues' && !ui.q.trim() ? '✓ No issues. The schedule check found nothing to fix.'
       : 'No activities match ' + (ui.q.trim() ? '“' + esc(ui.q.trim()) + '”' + (ui.filter !== 'all' ? ' with this filter' : '') : 'this filter') + '.';
-    h += '<tr><td colspan="' + cs.length + '" class="empty">' + msg + (P.activities.length ? '<div style="margin-top:10px"><button class="btn sm" data-showall>Show all activities</button></div>' : '') + '</td></tr>';
+    emptyRow = '<tr><td colspan="' + cs.length + '" class="empty">' + msg + (P.activities.length ? '<div style="margin-top:10px"><button class="btn sm" data-showall>Show all activities</button></div>' : '') + '</td></tr>';
   }
   let span = cs.findIndex((c) => ['start', 'finish', 'es', 'ef'].includes(c.k)); if (span < 1) span = cs.length;
   for (const row of rows) {
@@ -1494,7 +1519,7 @@ function renderTable() {
         return '<td class="c-' + c.k + (c.n ? ' n' : '') + (c.d ? ' d' : '') + (editable ? ' ed' : '') + '" data-k="' + c.k + '">' + cellHtml(c, a, r) + '</td>';
       }).join('') + '</tr>';
   }
-  $('#grid').innerHTML = h + '</tbody>'; $('#grid').style.width = cs.reduce((s, c) => s + c.w, 0) + 'px';
+  $('#grid').innerHTML = h + emptyRow + '</tbody>'; $('#grid').style.width = cs.reduce((s, c) => s + c.w, 0) + 'px';
 }
 
 // ---------- gantt
@@ -2126,7 +2151,7 @@ function commands() {
     C('Save project file', () => saveFile(fileName('json'), JSON.stringify(P, null, 1)), 'download json', 'Ctrl+S'),
     C('Open project file', () => $('#fileIn').click(), 'load import json'),
     C('Export to Excel (CSV)', () => saveFile(fileName('csv'), toCsv()), 'csv spreadsheet download'),
-    C('New blank project', () => confirmBox('Start a new project?', 'The current project will be replaced. Save it first if you want to keep it.', 'New project', () => { load(blank()); toast('New project'); }), 'empty'),
+    C('New project…', showNewProject, 'create start blank template elevator modernization copy'),
     C('Load sample project', () => confirmBox('Load the sample project?', 'The current project will be replaced. Save it first if you want to keep it.', 'Load sample', () => { load(sample()); toast('Sample loaded'); }), 'example demo elevator'),
     C('Show table only', setv('view', 'table'), 'view'), C('Show table and Gantt', setv('view', 'both'), 'view split'), C('Show Gantt only', setv('view', 'gantt'), 'view chart'),
     C('Zoom to days', setv('zoom', 'day'), 'timescale'), C('Zoom to weeks', setv('zoom', 'week'), 'timescale'), C('Zoom to months', setv('zoom', 'month'), 'timescale'),
@@ -2182,6 +2207,145 @@ function showCmd() {
   });
   modalHandler = (e) => { const li = e.target.closest('[data-ci]'); if (e.type === 'click' && li) run(items[+li.dataset.ci]); };
 }
+// ---------- New project: one screen, smart defaults, live preview of the result
+const NP_KEY = 'opentrak.newproject';
+const NP_DUR = [ // standard elevator modernization durations, work days (fabrication in calendar days)
+  ['survey', 'Field survey & measurements', 3], ['shop', 'Prepare & submit shop drawings', 10], ['review', 'Shop drawing review & approval', 10],
+  ['dob', 'DOB permit filing & approval', 20], ['fab', 'Fabrication (calendar days)', 45],
+  ['demo', 'Demolition & removal', 5], ['machine', 'Install machine & sheave', 7], ['wiring', 'Controller & machine-room wiring', 8],
+  ['hoistway', 'Hoistway equipment & door operators', 10], ['adjust', 'Adjust & test', 5], ['dobtest', 'DOB acceptance test', 1],
+  ['punch', 'Punch list', 5], ['docs', 'Closeout documents & O&M manuals', 10],
+];
+function npDefaults() {
+  let m = {}; try { m = JSON.parse(localStorage.getItem(NP_KEY) || '{}') || {}; } catch (e) { m = {}; }
+  const d = {}; for (const [k, , v] of NP_DUR) d[k] = int(m.d && m.d[k], 0, 999, v);
+  return { from: ['tpl', 'blank'].includes(m.from) ? m.from : 'tpl', cars: int(m.cars, 1, 24, 2), mode: m.mode === 'two' ? 'two' : 'one', work: ['5', '6', '7'].includes(m.work) ? m.work : '5', d,
+    company: str(m.company || (P && P.layout && P.layout.print && P.layout.print.company) || '', 80) };
+}
+function nextMonday() { const t = CPM.toDn(today()); const w = CPM.weekday(t); return CPM.toIso(t + (w === 1 ? 0 : (8 - w) % 7)); }
+function npCalendars(work) {
+  const c = defaultCals();
+  if (work === '6') c.unshift({ id: 'std6', name: 'Standard 6-day', workDays: [false, true, true, true, true, true, true], holidays: [], rules: CPM.DEFAULT_HOLIDAYS.slice(), observe: true });
+  return { calendars: c, defaultCal: work === '7' ? 'cal7' : work === '6' ? 'std6' : 'std5' };
+}
+function modTemplate(f) {
+  const d = f.d, acts = [], rels = [], W = [{ id: 'W1', code: '1', name: 'Preconstruction' }];
+  const add = (code, name, wbs, od, x = {}) => acts.push({ id: code, code, name, wbs, od, rd: od, type: 'task', pct: 0, ...x });
+  const L = (a, b, type = 'FS', lag = 0) => rels.push({ id: a + '-' + b, from: a, to: b, type, lag });
+  add('A1000', 'Notice to proceed', 'W1', 0, { type: 'start' });
+  add('A1010', 'Field survey & hoistway measurements', 'W1', d.survey);
+  add('A1020', 'Prepare & submit shop drawings', 'W1', d.shop);
+  add('A1030', 'Shop drawing review & approval', 'W1', d.review);
+  add('A1040', 'DOB permit filing & approval', 'W1', d.dob);
+  add('A1050', 'Fabricate machine, controller & door equipment', 'W1', d.fab, { cal: 'cal7', res: 'Manufacturer' });
+  add('A1060', 'Material delivered to site', 'W1', 0, { type: 'finish' });
+  L('A1000', 'A1010'); L('A1010', 'A1020'); L('A1020', 'A1030'); L('A1020', 'A1040', 'SS', 5); L('A1030', 'A1050'); L('A1050', 'A1060');
+  const back = []; // "returned to service" milestone of each car
+  for (let c = 1; c <= f.cars; c++) {
+    const w = 'W' + (c + 1), k = (n) => 'A' + (c + 1) + n, car = 'Car ' + c;
+    W.push({ id: w, code: String(c + 1), name: car + ' modernization' });
+    add(k('000'), 'Remove ' + car + ' from service', w, 0, { type: 'start' });
+    add(k('010'), car + ' — demolition & removal', w, d.demo, { res: 'Mechanics (2)' });
+    add(k('020'), car + ' — install machine & sheave', w, d.machine, { res: 'Mechanics (2)' });
+    add(k('030'), car + ' — controller & machine-room wiring', w, d.wiring, { res: 'Mechanics (2)' });
+    add(k('040'), car + ' — hoistway equipment & door operators', w, d.hoistway, { res: 'Mechanics (2)' });
+    add(k('050'), car + ' — adjust & test', w, d.adjust, { res: 'Adjuster' });
+    add(k('060'), car + ' — DOB acceptance test', w, d.dobtest, { res: 'DOB inspector' });
+    add(k('070'), car + ' returned to service', w, 0, { type: 'finish' });
+    L(k('000'), k('010')); L(k('010'), k('020')); L(k('020'), k('030'), 'SS', 3); L(k('020'), k('040')); L(k('030'), k('050')); L(k('040'), k('050')); L(k('050'), k('060')); L(k('060'), k('070'));
+    const step = f.mode === 'two' ? 2 : 1;
+    if (c <= step) { L('A1060', k('000')); L('A1040', k('000')); } else L(back[c - 1 - step], k('000'));
+    back.push(k('070'));
+  }
+  const cw = 'W' + (f.cars + 2), cc = (n) => 'A' + (f.cars + 2) + n;
+  W.push({ id: cw, code: String(f.cars + 2), name: 'Closeout' });
+  add(cc('000'), 'Punch list', cw, d.punch); add(cc('010'), 'Closeout documents, warranties & O&M manuals', cw, d.docs); add(cc('020'), 'Final completion', cw, 0, { type: 'finish' });
+  for (const b of back.slice(f.mode === 'two' ? -2 : -1)) L(b, cc('000'));
+  L(cc('000'), cc('010'), 'SS', 2); L(cc('010'), cc('020')); L(cc('000'), cc('020'));
+  return { wbs: W, activities: acts, relationships: rels };
+}
+function npBuild(f) {
+  // a new project keeps your columns, bar styles and print setup; job-specific print text is cleared
+  const lay = JSON.parse(JSON.stringify(P.layout)); lay.print = { ...(lay.print || {}), title: '', rev: '', from: '', to: '', company: f.company };
+  const base = { format: 'opentrak', name: f.name.trim() || 'New project', startDate: f.start, dataDate: f.start, mustFinishBy: f.finish, layout: lay };
+  if (f.from === 'copy' && f.copy) {
+    const c = JSON.parse(JSON.stringify(f.copy));
+    c.activities.forEach((a) => { a.as = a.af = ''; a.pct = 0; a.rd = a.od; if (['MSO', 'MFO', 'SNET', 'SNLT', 'FNET', 'FNLT'].includes(a.cType)) { a.cType = ''; a.cDate = ''; } });
+    return sanitize({ ...c, ...base, baseline: null, spell: c.spell });
+  }
+  const cal = npCalendars(f.work);
+  const body = f.from === 'tpl' ? modTemplate(f) : { wbs: [{ id: uid(), code: '1', name: 'General' }], activities: [], relationships: [] };
+  return sanitize({ ...base, ...cal, ...body });
+}
+function showNewProject() {
+  const f = { ...npDefaults(), name: '', start: nextMonday(), finish: '', copy: null, copyName: '' };
+  const dn = (iso) => (iso ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][CPM.weekday(CPM.toDn(iso))] + ' ' + fmt(iso) : '');
+  const card = (v, title, sub) => '<label class="np-card"><input type="radio" name="npFrom" value="' + v + '"' + (f.from === v ? ' checked' : '') + '><span><b>' + title + '</b><small>' + sub + '</small></span></label>';
+  const segB = (k, opts, label) => '<div class="seg" role="group" aria-label="' + label + '">' + opts.map(([v, l]) => '<button type="button" data-npseg="' + k + '" data-v="' + v + '" class="' + (String(f[k]) === v ? 'on' : '') + '" aria-pressed="' + (String(f[k]) === v) + '">' + l + '</button>').join('') + '</div>';
+  const optsHtml = () => {
+    if (f.from === 'tpl') return '<div class="np-opts"><div class="np-line"><label class="f np-cars">Number of cars<input class="inp" type="number" min="1" max="24" data-np="cars" value="' + f.cars + '"></label>'
+      + '<div class="f"><span>Cars out of service</span>' + segB('mode', [['one', 'One at a time'], ['two', 'Two at a time']], 'Cars out of service at once') + '</div></div>'
+      + '<details class="np-durs"><summary>Standard durations <span class="hint" style="margin:0">(work days; your changes become the new defaults)</span></summary><div class="np-dgrid">'
+      + NP_DUR.map(([k, l]) => '<label class="np-d"><span>' + esc(l) + '</span><input class="inp" type="number" min="0" max="999" data-npd="' + k + '" value="' + f.d[k] + '"></label>').join('') + '</div></details></div>';
+    if (f.from === 'copy') return '<div class="np-opts">' + (f.copy ? '<p class="np-ok">✓ <b>' + esc(f.copyName) + '</b> — ' + f.copy.activities.length + ' activities, ' + f.copy.relationships.length + ' links. Progress, baseline and date constraints are cleared; durations, logic, calendars and groups are kept.</p><button type="button" class="btn sm" id="npPick">Choose a different file</button>'
+      : '<button type="button" class="btn" id="npPick">Choose a project file…</button><p class="hint">Pick a saved OpenTrak project (.json).</p>') + '</div>';
+    return '';
+  };
+  const summary = () => {
+    const el = $('#npSum'); if (!el) return;
+    if (f.from === 'blank') { el.innerHTML = 'An empty project starting <b>' + esc(dn(f.start)) + '</b>.'; return; }
+    if (f.from === 'copy' && !f.copy) { el.innerHTML = '<span class="hint" style="margin:0">Choose a file to see the result.</span>'; return; }
+    try {
+      const np = npBuild(f); const t = CPM.schedule(np); const n = np.activities.length;
+      let h = '<b>' + n + ' activities</b> · estimated finish <b>' + esc(dn(t.finish)) + '</b>';
+      if (f.finish) { const late = CPM.makeCal(np.calendars.find((c) => c.id === np.defaultCal)).between(CPM.toDn(f.finish) + 1, t.finishP); h += late > 0 ? ' · <span class="neg">' + late + ' work days after the required finish</span>' : ' · <span class="pos">meets the required finish</span>'; }
+      el.innerHTML = h;
+    } catch (e) { el.textContent = ''; }
+  };
+  const drawOpts = () => { $('#npOpts').innerHTML = optsHtml(); $('#npWork').hidden = f.from === 'copy'; summary(); };
+  const remember = () => { try { localStorage.setItem(NP_KEY, JSON.stringify({ from: f.from === 'copy' ? 'tpl' : f.from, cars: f.cars, mode: f.mode, work: f.work, d: f.d, company: f.company })); } catch (e) { /* storage unavailable */ } };
+  const hasWork = P.activities.length > 0;
+  modal('New project', '<div class="np">'
+    + '<label class="f np-name">Project name<input class="inp" id="npName" data-np="name" maxlength="120" placeholder="e.g. 55 West 25th Street — Cars 1–4" autocomplete="off" aria-describedby="npNameErr"><span class="np-err" id="npNameErr" role="alert"></span></label>'
+    + '<div class="np-line"><label class="f">Start date<input class="inp" type="date" data-np="start" value="' + f.start + '"></label>'
+    + '<label class="f"><span>Required finish <i class="np-opt">optional</i></span><input class="inp" type="date" data-np="finish" value=""></label>'
+    + '<div class="f" id="npWork"><span>Work week</span>' + segB('work', [['5', '5-day'], ['6', '6-day'], ['7', '7-day']], 'Work week') + '</div></div>'
+    + '<fieldset class="np-from"><legend>Start from</legend><div class="np-cards">'
+    + card('tpl', 'Elevator modernization', 'Standard sequence for each car, linked and ready') + card('blank', 'Blank project', 'Add your own activities') + card('copy', 'Copy a previous job', 'Reuse its activities and logic')
+    + '</div></fieldset><div id="npOpts"></div>'
+    + '<label class="f"><span>Prepared by <i class="np-opt">for printouts</i></span><input class="inp" data-np="company" maxlength="80" value="' + esc(f.company) + '" placeholder="e.g. Centennial Elevator — Steven Lindgren, PM"></label>'
+    + '<input type="file" id="npFile" accept=".json,application/json" hidden></div>',
+    '<span class="np-sum" id="npSum" aria-live="polite"></span>' + (hasWork ? '<button class="btn ghost sm" id="npSaveCur" title="Download the open project before it is replaced">Save current job first</button>' : '') + '<button class="btn" data-close>Cancel</button><button class="btn pri" id="npGo">Create project</button>');
+  $('.modal').style.width = 'min(720px,100%)'; drawOpts();
+  setTimeout(() => $('#npName').focus(), 0);
+  const body = $('.np'); // listeners live on this screen's own element, so they go away with it
+  body.addEventListener('input', (e) => { const t = e.target; if (t.dataset.np === 'name') { f.name = t.value; if (f.name.trim()) $('#npNameErr').textContent = ''; } else if (t.dataset.np === 'company') f.company = t.value; else if (t.dataset.np === 'cars') { f.cars = int(t.value, 1, 24, f.cars); summary(); } else if (t.dataset.npd) { f.d[t.dataset.npd] = int(t.value, 0, 999, f.d[t.dataset.npd]); summary(); } });
+  body.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.id === 'npName') { e.preventDefault(); $('#npGo').click(); } });
+  $('#npFile').addEventListener('change', async (e) => {
+    const file = e.target.files[0]; e.target.value = ''; if (!file) { if (!f.copy) { f.from = 'tpl'; body.querySelector('input[value="tpl"]').checked = true; drawOpts(); } return; }
+    try { f.copy = sanitize(JSON.parse(await file.text())); f.copyName = file.name; if (!f.name.trim()) { f.name = f.copy.name + ' (copy)'; $('#npName').value = f.name; } drawOpts(); }
+    catch (err) { toast('Could not read that file: ' + (err.message || 'not an OpenTrak project')); if (!f.copy) { f.from = 'tpl'; body.querySelector('input[value="tpl"]').checked = true; drawOpts(); } }
+  });
+  modalHandler = (e) => {
+    const t = e.target;
+    if (e.type === 'change' && t.name === 'npFrom') { f.from = t.value; drawOpts(); if (f.from === 'copy' && !f.copy) $('#npFile').click(); return; }
+    if (e.type === 'change' && (t.dataset.np === 'start' || t.dataset.np === 'finish')) { f[t.dataset.np] = dt(t.value) || (t.dataset.np === 'start' ? f.start : ''); if (t.dataset.np === 'start' && !dt(t.value)) t.value = f.start; summary(); return; }
+    const sb = t.closest('[data-npseg]'); if (e.type === 'click' && sb) { f[sb.dataset.npseg] = sb.dataset.v; $$('[data-npseg="' + sb.dataset.npseg + '"]').forEach((b) => { const on = b === sb; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); summary(); return; }
+    if (e.type === 'click' && t.id === 'npPick') { $('#npFile').click(); return; }
+    if (e.type === 'click' && t.id === 'npSaveCur') { saveFile(fileName('json'), JSON.stringify(P, null, 1)); t.textContent = 'Saved ✓'; t.disabled = true; return; }
+    if (e.type === 'click' && t.id === 'npGo') {
+      if (!f.name.trim()) { $('#npNameErr').textContent = 'Give the project a name to continue.'; $('#npName').focus(); return; }
+      if (f.from === 'copy' && !f.copy) { toast('Choose the project file to copy first'); return; }
+      if (f.finish && f.finish <= f.start) { toast('The required finish must be after the start date'); return; }
+      const np = npBuild(f); remember(); closeModal();
+      ui.sel = null; ui.filter = 'all'; ui.q = ''; $('#q').value = ''; ui.collapsed.clear();
+      commit(() => { P = np; });
+      setTimeout(scrollToDataDate, 0);
+      toast('Created ' + np.name + (np.activities.length ? ' with ' + np.activities.length + ' activities' : ''), { label: 'Undo', fn: () => { doUndo(); toast('Back to the previous project'); } });
+    }
+  };
+}
+
 function showCheck() {
   const items = [...S.errors.map((e) => ({ ...e, k: 'e' })), ...S.warnings.map((w) => ({ ...w, k: 'w' }))];
   const body = items.length ? items.map((x, i) => '<div class="issue" data-i="' + i + '"><span class="k ' + x.k + '">' + (x.k === 'e' ? 'Error' : 'Check') + '</span><div>' + esc(x.msg) + '</div></div>').join('')
@@ -2276,7 +2440,7 @@ function showFile() {
     + '<button class="btn filebtn" data-fa="open"><svg class="i" viewBox="0 0 16 16"><path d="M2 5a1.5 1.5 0 0 1 1.5-1.5h2.8l1.6 1.6h4.6A1.5 1.5 0 0 1 14 6.6v5.9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5z"/></svg><span>Open project file</span></button>'
     + '<button class="btn filebtn" data-fa="pdf"><svg class="i" viewBox="0 0 16 16"><path d="M4.5 6V2.5h7V6"/><rect x="2.5" y="6" width="11" height="5.5" rx="1.3"/><path d="M4.5 9.5h7v4h-7z"/></svg><span>Print or save as PDF</span></button>'
     + '<button class="btn filebtn" data-fa="csv"><svg class="i" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="1.8"/><path d="M2.5 6.5h11M2.5 10h11M6.5 6.5v7"/></svg><span>Export activity list <span style="color:var(--muted)">— .csv for Excel</span></span></button>'
-    + '<button class="btn filebtn" data-fa="new"><svg class="i" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg><span>New blank project</span></button>'
+    + '<button class="btn filebtn" data-fa="new"><svg class="i" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg><span>New project… <span style="color:var(--muted)">— name, start date, template</span></span></button>'
     + '<button class="btn filebtn" data-fa="sample"><svg class="i" viewBox="0 0 16 16"><path d="M2.5 13.5h11M4 13.5V7l4-3 4 3v6.5M6.5 13.5v-3h3v3"/></svg><span>Load sample project <span style="color:var(--muted)">— elevator modernization</span></span></button>'
     + '</div><p class="hint">Your work also autosaves in this browser. Save a project file to keep a permanent copy or send it to someone.</p>'
     + '<p class="hint"><a href="#" data-fa="keys" style="color:var(--accent-fg)">Keyboard shortcuts</a> (press <kbd>?</kbd> anytime)</p>');
@@ -2287,7 +2451,7 @@ function showFile() {
     if (k === 'open') { closeModal(); $('#fileIn').click(); }
     if (k === 'pdf') { closeModal(); showPrint(); }
     if (k === 'csv') { closeModal(); saveFile(fileName('csv'), toCsv()); }
-    if (k === 'new') confirmBox('Start a new project?', 'The current project will be replaced. Save it first if you want to keep it.', 'New project', () => { load(blank()); toast('New project'); });
+    if (k === 'new') { closeModal(); showNewProject(); }
     if (k === 'sample') confirmBox('Load the sample project?', 'The current project will be replaced. Save it first if you want to keep it.', 'Load sample', () => { load(sample()); toast('Sample loaded'); });
   };
 }
