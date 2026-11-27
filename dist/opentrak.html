@@ -1414,7 +1414,7 @@ function sanitizeLayout(o) {
   if (!cols.some((c) => c.show)) cols.find((c) => c.k === 'name').show = true;
   const p = o.print && typeof o.print === 'object' ? o.print : null;
   const ob = (v) => (v == null ? null : !!v);
-  const print = p ? { paper: str(p.paper, 12), orient: str(p.orient, 12), scope: str(p.scope, 6), density: str(p.density, 10), links: p.links == null ? true : !!p.links, footer: p.footer == null ? true : !!p.footer, company: str(p.company, 80), title: str(p.title, 120), rev: str(p.rev, 80), from: dt(p.from), to: dt(p.to),
+  const print = p ? { paper: str(p.paper, 12), orient: str(p.orient, 12), scope: str(p.scope, 6), density: str(p.density, 10), links: p.links == null ? true : !!p.links, footer: p.footer == null ? true : !!p.footer, company: str(p.company, 80), title: str(p.title, 120), rev: str(p.rev, 80), note: str(p.note, 300), from: dt(p.from), to: dt(p.to),
     cols: Array.isArray(p.cols) ? [...new Set(p.cols.filter((k) => COLREG[k]))].slice(0, 30) : null, bl: ob(p.bl), float: ob(p.float), prog: ob(p.prog), groups: ob(p.groups), nonwork: ob(p.nonwork), ddline: ob(p.ddline), label: LABELS[p.label] ? p.label : null } : {};
   return { preset: PRESETS[o.preset] ? o.preset : 'custom', rowH: int(o.rowH, 20, 48, 28), fontSize: int(o.fontSize, 10, 16, 12), links: o.links == null ? true : !!o.links, bars: out, cols, print };
 }
@@ -2553,7 +2553,7 @@ function printOpts() {
   const B = P.layout.bars, def = (v, d) => (v == null ? d : !!v);
   return { paper: PAPER[o.paper] ? o.paper : 'tabloid', orient: o.orient === 'portrait' ? 'portrait' : 'landscape', scope: ['all', 'view', 'crit', 'open'].includes(o.scope) ? o.scope : 'view',
     density: ['compact', 'normal', 'roomy'].includes(o.density) ? o.density : 'normal', links: o.links == null ? P.layout.links : !!o.links, footer: o.footer == null ? true : !!o.footer,
-    company: str(o.company, 80), title: str(o.title, 120), rev: str(o.rev, 80), from: dt(o.from), to: dt(o.to),
+    company: str(o.company, 80), title: str(o.title, 120), rev: str(o.rev, 80), note: str(o.note, 300), from: dt(o.from), to: dt(o.to),
     cols: Array.isArray(o.cols) && o.cols.length ? o.cols.filter((k) => COLREG[k]) : null,
     bl: def(o.bl, B.target.show), float: def(o.float, B.float.show), prog: def(o.prog, B.progress.show), groups: def(o.groups, true), nonwork: def(o.nonwork, true), ddline: def(o.ddline, true),
     label: LABELS[o.label] ? o.label : B.labelR };
@@ -2602,7 +2602,7 @@ function paintPage(ctx, ops) {
       case 'setFontSize': st.size = a[0]; font(); break;
       case 'setFillColor': st.fill = rgb(a); break; case 'setDrawColor': st.draw = rgb(a); break; case 'setTextColor': st.text = rgb(a); break;
       case 'setLineWidth': ctx.lineWidth = a[0]; break; case 'setLineDashPattern': ctx.setLineDash(a[0] || []); break;
-      case 'text': { ctx.fillStyle = st.text; ctx.textAlign = a[3] && a[3].align === 'right' ? 'right' : 'left'; const ls = Array.isArray(a[0]) ? a[0] : [a[0]]; ls.forEach((t, i) => ctx.fillText(String(t), a[1], a[2] + i * st.size * 1.15)); break; }
+      case 'text': { ctx.fillStyle = st.text; ctx.textAlign = a[3] && (a[3].align === 'right' || a[3].align === 'center') ? a[3].align : 'left'; const lf = (a[3] && a[3].lineHeightFactor) || 1.15; const ls = Array.isArray(a[0]) ? a[0] : [a[0]]; ls.forEach((t, i) => ctx.fillText(String(t), a[1], a[2] + i * st.size * lf)); break; }
       case 'rect': ctx.beginPath(); ctx.rect(a[0], a[1], a[2], a[3]); paint(a[4]); break;
       case 'roundedRect': ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(a[0], a[1], a[2], a[3], a[4]); else ctx.rect(a[0], a[1], a[2], a[3]); paint(a[6]); break;
       case 'line': ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(a[2], a[3]); ctx.strokeStyle = st.draw; ctx.stroke(); break;
@@ -2622,7 +2622,7 @@ function buildPdf(o, mk) {
   const doc = mk ? mk(W, H) : new jsPDF({ orientation: o.orient, unit: 'pt', format: [Math.min(W, H), Math.max(W, H)], compress: true });
   doc.setProperties({ title: (o.title || P.name) + ' — schedule', creator: 'OpenTrak' });
   const B = JSON.parse(JSON.stringify(P.layout.bars)); B.target.show = !!o.bl; B.float.show = !!o.float; B.progress.show = !!o.prog; B.labelR = o.label;
-  const fsz = { compact: 6.3, normal: 7.2, roomy: 8.2 }[o.density];
+  const fsz = { compact: 6.3, normal: 7.2, roomy: 8.2 }[o.density]; let noteCut = false;
   const fill = (h) => doc.setFillColor(...hexRgb(h)), stroke = (h) => doc.setDrawColor(...hexRgb(h)), ink = (h) => doc.setTextColor(...hexRgb(h));
   const fit = (s, w) => { s = String(s ?? ''); if (doc.getTextWidth(s) <= w) return s; while (s.length > 1 && doc.getTextWidth(s + '…') > w) s = s.slice(0, -1); return s + '…'; };
   // columns: current layout, scaled to at most ~46% of the page
@@ -2778,14 +2778,24 @@ function buildPdf(o, mk) {
         doc.text(name, lx + 24, ly + 2.3);
       });
       if (o.ddline) { const dx = M + 110, dy = fy + 10 + (leg.length - 3) * 12; /* next free legend slot, second column */ doc.setDrawColor(14, 116, 200); doc.setLineDashPattern([3, 2], 0); doc.line(dx, dy - 3, dx + 18, dy - 3); doc.setLineDashPattern([], 0); doc.text('Data date', dx + 24, dy); } stroke('#000000');
-      const tbx = W - M - 250; doc.line(tbx, fy, tbx, fy + fh);
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.text(fit(o.company || 'OpenTrak', 236), tbx + 7, fy + 12);
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.text(fit(P.name, 236), tbx + 7, fy + 23);
+      const tbw = Math.round(Math.max(170, Math.min(250, (W - 2 * M) * 0.32))); // title block: 250pt on wide paper, narrower on Letter/A4 portrait
+      const tbx = W - M - tbw; doc.line(tbx, fy, tbx, fy + fh);
+      if (o.note && o.note.trim()) { // footer note: bold, centered in the box between the legend and the title block
+        const nx0 = M + 200, nw = tbx - nx0; doc.line(nx0, fy, nx0, fy + fh);
+        doc.setFont('helvetica', 'bold'); ink('#000000');
+        // largest size from 8.5pt down to 6.5pt at which the whole note fits; shorten only as a last resort
+        let fz = 8.5, lines, lh, max;
+        for (; ; fz -= 0.5) { doc.setFontSize(fz); lh = fz * 1.22; lines = doc.splitTextToSize(o.note.trim(), nw - 16); max = Math.max(1, Math.floor((fh - 4) / lh)); if (lines.length <= max || fz <= 6.5) break; }
+        if (lines.length > max) { lines = lines.slice(0, max); lines[max - 1] = fit(lines[max - 1] + '…', nw - 16); noteCut = true; }
+        doc.text(lines, nx0 + nw / 2, fy + fh / 2 - ((lines.length - 1) * lh) / 2 + fz * 0.35, { align: 'center', lineHeightFactor: 1.22 });
+      }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.text(fit(o.company || 'OpenTrak', tbw - 14), tbx + 7, fy + 12);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.text(fit(P.name, tbw - 14), tbx + 7, fy + 23);
       const v = P.baseline && P.baseline.finish ? -CPM.makeCal(calById(P.defaultCal)).between(CPM.toDn(P.baseline.finish) + 1, S.finishP) : null;
       doc.text('Finish ' + fmt(S.finish) + (v != null ? '   Baseline ' + fmt(P.baseline.finish) + ' (' + (v < 0 ? v + 'd late' : v > 0 ? '+' + v + 'd early' : 'on time') + ')' : ''), tbx + 7, fy + 34);
     }
   }
-  return { doc, pages: G.pages };
+  return { doc, pages: G.pages, noteCut };
 }
 
 // Print preview: options on the left, the real pages on the right (drawn by the same code as the PDF)
@@ -2812,9 +2822,11 @@ function showPrint() {
       + '<p class="hint" style="margin:4px 0 0">Leave blank to fit the whole schedule across the page.</p></details>'
       + '<div class="pv-sec"><h4>Title block</h4><label class="f">Title<input class="inp" data-p="title" data-live maxlength="120" placeholder="' + esc(P.name) + '" value="' + esc(o.title) + '"></label>'
       + '<label class="f">Company / prepared by<input class="inp" data-p="company" data-live maxlength="80" placeholder="e.g. Centennial Elevator — Steven Lindgren, PM" value="' + esc(o.company) + '"></label>'
-      + '<label class="f">Revision / note<input class="inp" data-p="rev" data-live maxlength="80" placeholder="e.g. Rev 2 — overtime option" value="' + esc(o.rev) + '"></label></div>';
+      + '<label class="f">Revision / note<input class="inp" data-p="rev" data-live maxlength="80" placeholder="e.g. Rev 2 — overtime option" value="' + esc(o.rev) + '"></label>'
+      + '<label class="f">Footer note<textarea class="inp" data-p="note" data-live rows="3" maxlength="300" placeholder="e.g. Based on straight-time hours, Mon–Fri. Overtime option not included." style="min-height:64px">' + esc(o.note) + '</textarea></label>'
+      + '<p class="hint" style="margin:2px 0 0">Prints in bold in the middle of the footer on every page' + (o.footer ? '.' : ' — turn on <b>Legend &amp; title block</b> to show it.') + '</p></div>';
   };
-  const save = () => { P.layout.print = { paper: o.paper, orient: o.orient, scope: o.scope, density: o.density, links: o.links, footer: o.footer, company: o.company, title: o.title, rev: o.rev, from: o.from, to: o.to, cols: o.cols, bl: o.bl, float: o.float, prog: o.prog, groups: o.groups, nonwork: o.nonwork, ddline: o.ddline, label: o.label }; persist(); };
+  const save = () => { P.layout.print = { paper: o.paper, orient: o.orient, scope: o.scope, density: o.density, links: o.links, footer: o.footer, company: o.company, title: o.title, rev: o.rev, note: o.note, from: o.from, to: o.to, cols: o.cols, bl: o.bl, float: o.float, prog: o.prog, groups: o.groups, nonwork: o.nonwork, ddline: o.ddline, label: o.label }; persist(); };
   const bad = () => (o.from && o.to && o.to <= o.from ? '“To” must be after “From”' : '');
   const paint = () => {
     const box = $('#pvPages'); if (!box) return;
@@ -2836,7 +2848,8 @@ function showPrint() {
     }
     if (n > show) { const p2 = document.createElement('p'); p2.className = 'hint'; p2.textContent = 'Showing the first ' + show + ' of ' + n + ' pages.'; box.appendChild(p2); }
     const rowsN = rowsFor(o.scope, o.groups).filter((r) => r.a).length;
-    $('#pvInfo').textContent = n + ' page' + (n > 1 ? 's' : '') + ' · ' + PAPER[o.paper][0] + ' ' + o.orient + ' · ' + rowsN + ' activit' + (rowsN === 1 ? 'y' : 'ies');
+    $('#pvInfo').innerHTML = esc(n + ' page' + (n > 1 ? 's' : '') + ' · ' + PAPER[o.paper][0] + ' ' + o.orient + ' · ' + rowsN + ' activit' + (rowsN === 1 ? 'y' : 'ies'))
+      + (built.noteCut ? ' · <span class="neg">footer note shortened to fit: use landscape, larger paper or a shorter note</span>' : '');
     last = built;
   };
   const later = () => { clearTimeout(timer); timer = setTimeout(() => { save(); paint(); }, 120); };
