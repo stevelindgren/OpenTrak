@@ -15,20 +15,12 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Automatic recalculation on every edit (no F9)
 
 **Interface**
-- **Design system:** graphite chrome, one cobalt accent, and color only where it means something (critical, warnings, OK). Every color, size, radius and shadow is a token, with light and dark designed together. See the [OpenTrak design system](https://claude.ai/artifact/1xezTxVZBu8Ld4E67crD4u)
-- **Everything in reach:** the header shows the project status (data date, Update progress, finish, baseline variance) and the main actions (Undo, Redo, Check, Print / PDF, Milestone, + Activity); the toolbar row below keeps every view option one click away: search, All / Critical / Incomplete / Issues, Table / Split / Gantt, Day / Week / Month, Logic / Float / Baseline and the legend
-- **Accessible controls:** in both themes every button and switch has a clearly visible edge (3:1 contrast), and the selected option in each group is marked with a cobalt outline, tint and bold text
-- Graphite dark theme by default with a light theme toggle; IBM Plex Sans embedded so it works offline
+- Dark theme by default with a light theme toggle; IBM Plex Sans embedded so it works offline
 - Accessibility: WCAG 2.2 AA contrast in both themes (checked with axe-core), labeled controls, keyboard focus kept in dialogs, and a color-blind-safe bar preset
 - Activity table grouped by WBS, with inline editing (click a cell, then Enter or Tab)
-- **Fast entry:** every group ends with a ready-to-type **＋ Add activity** line. Type a name, optionally Tab to the duration (blank = 5 days, 0 = milestone) and predecessors (pre-filled with the activity above, so a sequence links itself), and press Enter. The next line is ready at once, and IDs continue the group's series (A2070 → A2080)
 - Gantt chart with critical path, progress, float, baselines and logic lines
 - Drag from a bar's end to another bar to link them, or drag a bar's edge to change its duration
 - Detail panel for dates, progress, constraints, predecessors and successors (with driving links marked) and notes
-- **New project** (File → New project, or Ctrl+K → "new"): one screen with the project name, start date (defaults to next Monday), optional required finish and work week, plus how to start:
-  - **Elevator modernization template:** enter the number of cars and whether they come out of service one or two at a time; it builds the standard linked sequence (survey, shop drawings, DOB filing, fabrication, then demo → install → wiring → hoistway & doors → adjust → DOB test → return to service for each car, then closeout). The standard durations are editable and your changes become the defaults
-  - **Blank project**, or **copy a previous job** (keeps activities, logic, calendars and groups; clears progress, baseline and date constraints)
-  - A live line shows the activity count and estimated finish, and warns if it misses the required finish, before anything is created. Your columns, bar styles and print setup carry over. Creating a project can be undone, and "Save current job first" downloads the open project
 - **Why these dates:** the detail panel traces the driving path back to where it starts, says how far the activity is behind the baseline, and names the activities that caused the delay (e.g. "duration grew from 45 to 50 days, +10d"). In the Claude-hosted version, **Suggest ways to recover** hands that path to the assistant
 - **Update progress:** pick a new data date and see only the work that should have started by then. Mark each one Not started / Started / Done, or click **Fill in as planned** and adjust what went differently. A live preview shows how the finish date moves before you apply, and the whole update undoes in one step
 - **Type links in the table:** the Predecessors and Successors columns are editable, SureTrak style: `A1020, A1030 SS+3, A1040 FF-2`. Unknown IDs and loops are rejected with a clear message
@@ -73,7 +65,6 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 | Key | Action |
 |---|---|
 | Insert or Ctrl+Enter | Add an activity after the selected one, linked to it |
-| Enter in the ＋ Add activity line | Add it and start the next one (Esc clears the line) |
 | ↑ / ↓ | Move the selection |
 | F2 | Rename the selected activity |
 | Delete | Delete the selected activity (Undo in the message brings it back) |

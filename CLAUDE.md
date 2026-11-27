@@ -31,6 +31,10 @@ Do not add a feature just because competing software has it. Every feature must 
 - WCAG 2.2 AA: contrast in both themes, labeled controls, visible focus, no information carried by color or tooltip alone.
 - Design for people with little scheduling or technical experience, without slowing down professional schedulers.
 
+## Visual style
+
+The owner prefers the current look (navy dark theme, colored buttons and rail icons, the two-row header and toolbar with every option visible). A redesign to a graphite design system and a single command bar was tried on 26-Nov-26 and rolled back at the owner's request. Don't restyle, recolor or rearrange the header, toolbar or rail without explicit approval.
+
 ## AI
 
 AI should feel like part of the app, not a separate chatbot: reduce repetitive work, explain scheduling problems, flag risks, resolve conflicts and recommend fixes. Users stay in control: previews, explicit approval, and one-step undo.
@@ -38,18 +42,6 @@ AI should feel like part of the app, not a separate chatbot: reduce repetitive w
 ## Judge every change by
 
 Time to complete the task · number of interactions · ease of learning · error prevention · visual clarity · accessibility · user confidence · scheduling accuracy · overall productivity.
-
-## Design system
-
-The visual rules live in the OpenTrak design system (https://claude.ai/artifact/1xezTxVZBu8Ld4E67crD4u): brand book, tokens for both themes, and component guidelines. In code, every token is a CSS custom property prefixed `--ot-` defined once at the top of `src/app.html` (`surface` → `--ot-surface`). Older variable names (`--panel`, `--line`, `--muted`…) are aliases of those tokens.
-
-- Use tokens, never raw hex, in new UI. Chrome stays graphite; color only for meaning (critical, warning, success) and cobalt only for focus, selection, the primary action and the data date.
-- One filled primary button per view. Everything else is an outlined or ghost button, a menu item or a link.
-- **Top layout is the owner's choice — keep it:** a header with the project name, status pills (data date, Update progress, finish, baseline variance) and the action buttons (Undo, Redo, Check, Print / PDF, Milestone, + Activity); and one toolbar row with every view option visible (search, All/Critical/Incomplete/Issues, Table/Split/Gantt, Day/Week/Month, Logic/Float/Baseline switches, legend). Don't move these into menus or collapse them.
-- **Accessible controls:** every control edge uses `--ot-border-strong` (3:1 against its ground in both themes). A selected option is shown by a cobalt ring, tint and bold text, and exposes `aria-pressed`; never by a faint fill alone.
-- Four type sizes (16 / 13 / 12 / 11), three weights (400 / 500 / 600), tabular figures, sentence case.
-- Hairlines (`border`, `border-subtle`) separate regions; shadows only on menus and dialogs.
-- Check both themes and phone width (390px) for every change; keep axe-core WCAG 2.2 AA clean, including 24px click targets.
 
 ## Repo conventions
 
