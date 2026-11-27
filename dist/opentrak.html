@@ -177,7 +177,7 @@ table.grid{border-collapse:separate;border-spacing:0;table-layout:fixed}
 .grid td.d{font-variant-numeric:tabular-nums;color:var(--text);padding:0 7px}
 .grid td.c-code{color:var(--muted);font-variant-numeric:tabular-nums}
 .grid tr.act:hover td{background:var(--hover)}
-.grid tr.fill td{cursor:default}
+.grid tr.fill td{cursor:pointer} .grid tr.fill:hover td{background:var(--hover)} .fillhint{color:var(--muted)}
 #gantt .sp{fill:var(--panel)} #gantt text.sl{font-weight:600}
 .grid tr.sel td{background:var(--sel)!important}
 .grid tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--sel-line)}
@@ -265,6 +265,7 @@ textarea.inp{height:auto;min-height:70px;padding:8px 9px;resize:vertical}
 .issue .k{flex:none;font-weight:600;font-size:11px;padding:2px 7px;border-radius:5px}
 .issue .k.e{background:var(--tint-bad);color:var(--bad)} .issue .k.w{background:var(--tint-warn);color:var(--warn)}
 .wbsrow{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.dg-when{border:0;padding:0;margin:14px 0 0;display:grid;gap:8px} .dg-when legend{font-size:12.5px;color:var(--muted);margin-bottom:6px;padding:0}
 .chk{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
 .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,8px);background:var(--raised);color:var(--text);border:1px solid var(--line);padding:9px 15px;border-radius:10px;font-size:12.5px;opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;z-index:60;max-width:90vw;box-shadow:var(--shadow)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -511,7 +512,7 @@ textarea.inp{height:auto}
       <div class="vr hide-m"></div>
       <label class="search"><svg class="i" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input id="q" placeholder="Search activities   /" aria-label="Search activities (press / to jump here)"></label>
       <div class="seg" id="fseg" role="group" aria-label="Filter">
-        <button data-f="all" class="on">All</button><button data-f="crit">Critical</button><button data-f="open">Incomplete</button><button data-f="issues">Issues</button>
+        <button data-f="all" class="on">All</button><button data-f="crit">Critical</button><button data-f="open">Incomplete</button><button data-f="issues">Issues</button><button data-f="look" title="Work underway or starting in the next 3 weeks">Look-ahead</button>
       </div>
       <div class="seg" id="vseg" role="group" aria-label="View">
         <button data-v="table">Table</button><button data-v="both" class="on hide-m">Split</button><button data-v="gantt">Gantt</button>
@@ -1550,6 +1551,7 @@ const actByCode = (c) => P.activities.find((a) => a.code.toLowerCase() === Strin
 const calById = (id) => P.calendars.find((c) => c.id === id) || P.calendars.find((c) => c.id === P.defaultCal) || P.calendars[0];
 const engCal = (a) => CPM.makeCal(calById(a.cal));
 
+const LOOK_DAYS = 21;
 function nextCode(prefix = 'A') {
   if (!P.activities.length) return prefix + '1000'; // SureTrak-style numbering for a new project
   let m = 0; for (const a of P.activities) { const n = parseInt(String(a.code).replace(/\D/g, ''), 10); if (Number.isFinite(n)) m = Math.max(m, n); }
@@ -1566,6 +1568,7 @@ function buildRows() {
     if (ui.filter === 'crit' && !r.critical) return false;
     if (ui.filter === 'open' && r.status === 'done') return false;
     if (iss && !iss.has(a.id)) return false;
+    if (ui.filter === 'look' && (r.status === 'done' || !(r.esP < CPM.toDn(P.dataDate) + LOOK_DAYS))) return false; // underway, or starting within 3 weeks of the data date
     return true;
   };
   const sortKey = (a) => { const r = S.acts[a.id] || {}; return [r.esP ?? 1e9, r.efP ?? 1e9, a.code]; };
@@ -1640,6 +1643,7 @@ function renderTable() {
   if (!rows.length) {
     const msg = !P.activities.length ? 'No activities yet. Click <b>＋ Activity</b> or press <kbd>Insert</kbd> to add the first one.'
       : ui.filter === 'issues' && !ui.q.trim() ? '✓ No issues. The schedule check found nothing to fix.'
+      : ui.filter === 'look' && !ui.q.trim() ? 'Nothing is underway or starting in the 3 weeks after the data date (' + fmt(P.dataDate) + ').'
       : 'No activities match ' + (ui.q.trim() ? '“' + esc(ui.q.trim()) + '”' + (ui.filter !== 'all' ? ' with this filter' : '') : 'this filter') + '.';
     h += '<tr><td colspan="' + cs.length + '" class="empty">' + msg + (P.activities.length ? '<div style="margin-top:10px"><button class="btn sm" data-showall>Show all activities</button></div>' : '') + '</td></tr>';
   }
@@ -1661,8 +1665,9 @@ function renderTable() {
         return '<td class="c-' + c.k + (c.n ? ' n' : '') + (c.d ? ' d' : '') + (editable ? ' ed' : '') + '" data-k="' + c.k + '"' + (ci === 0 && groupColor(a.wbs) ? ' style="box-shadow:inset 4px 0 0 ' + groupColor(a.wbs) + '"' : '') + '>' + cellHtml(c, a, r) + '</td>';
       }).join('') + '</tr>';
   }
-  const blank = '<tr class="fill" aria-hidden="true">' + '<td></td>'.repeat(cs.length) + '</tr>';
-  h += blank.repeat(Math.max(0, fillTo - Math.max(rows.length, 1)));
+  const nFill = Math.max(0, fillTo - Math.max(rows.length, 1)), ni = Math.max(0, cs.findIndex((c) => c.k === 'name'));
+  const blank = (hint) => '<tr class="fill" aria-hidden="true">' + cs.map((c, i) => '<td>' + (hint && i === ni ? '<span class="fillhint">Click to add an activity</span>' : '') + '</td>').join('') + '</tr>';
+  for (let i = 0; i < nFill; i++) h += blank(i === 0);
   $('#grid').innerHTML = h + '</tbody>'; $('#grid').style.width = cs.reduce((s, c) => s + c.w, 0) + 'px';
 }
 
@@ -2298,6 +2303,8 @@ function commands() {
     C('Show critical activities', setv('filter', 'crit'), 'filter critical path'),
     C('Show incomplete activities', setv('filter', 'open'), 'filter remaining open'),
     C('Show activities with issues', setv('filter', 'issues'), 'filter problems'),
+    C('Show 3-week look-ahead', setv('filter', 'look'), 'filter lookahead next weeks upcoming field meeting'),
+    ...P.wbs.map((w) => C('Duplicate group: ' + w.name, () => showDupGroup(w.id), 'copy repeat car group wbs')),
     C((P.layout.links ? 'Hide' : 'Show') + ' logic lines', () => commit(() => { P.layout.links = !P.layout.links; }), 'relationships arrows toggle'),
     C((P.layout.bars.float.show ? 'Hide' : 'Show') + ' float bars', () => commit(() => { P.layout.bars.float.show = !P.layout.bars.float.show; }), 'toggle slack'),
     C((P.layout.bars.target.show ? 'Hide' : 'Show') + ' baseline bars', () => commit(() => { P.layout.bars.target.show = !P.layout.bars.target.show; }), 'toggle target'),
@@ -2417,7 +2424,7 @@ function showProject() {
       + '<label class="f">Data date (status date)<input class="inp" type="date" data-pf="dataDate" value="' + P.dataDate + '"></label>'
       + '<label class="f">Must finish by (optional)<input class="inp" type="date" data-pf="mustFinishBy" value="' + P.mustFinishBy + '"></label>'
       + '<label class="f">Critical if total float ≤<input class="inp" type="number" data-pf="critThreshold" value="' + P.critThreshold + '"></label></div>'
-      + '<div class="sec" style="margin-top:16px"><h4>WBS / groups</h4>' + P.wbs.map((w, i) => '<div class="wbsrow" data-w="' + esc(w.id) + '"><input class="inp" data-wc value="' + esc(w.code) + '" placeholder="Code" maxlength="30" style="width:70px" aria-label="WBS code"><input class="inp" data-wn value="' + esc(w.name) + '" maxlength="120" aria-label="WBS group name"><button class="btn sm ghost" data-wu ' + (i ? '' : 'disabled') + ' title="Move up">↑</button><button class="btn sm ghost" data-wdn ' + (i < P.wbs.length - 1 ? '' : 'disabled') + ' title="Move down">↓</button><button class="x" data-wdel title="Delete group">×</button></div>').join('')
+      + '<div class="sec" style="margin-top:16px"><h4>WBS / groups</h4>' + P.wbs.map((w, i) => '<div class="wbsrow" data-w="' + esc(w.id) + '"><input class="inp" data-wc value="' + esc(w.code) + '" placeholder="Code" maxlength="30" style="width:70px" aria-label="WBS code"><input class="inp" data-wn value="' + esc(w.name) + '" maxlength="120" aria-label="WBS group name"><button class="btn sm ghost" data-wu ' + (i ? '' : 'disabled') + ' title="Move up">↑</button><button class="btn sm ghost" data-wdn ' + (i < P.wbs.length - 1 ? '' : 'disabled') + ' title="Move down">↓</button><button class="btn sm" data-wdup>Duplicate</button><button class="x" data-wdel title="Delete group" aria-label="Delete group ' + esc(w.name) + '">×</button></div>').join('')
       + '<button class="btn sm" data-wadd>＋ Add group</button><div class="hint">Deleting a group moves its activities to “Unassigned”.</div></div>';
   };
   modal('Project settings', '', '<button class="btn pri" data-close>Done</button>'); draw();
@@ -2431,7 +2438,62 @@ function showProject() {
     if (e.type === 'change' && t.matches('[data-wn]')) commit(() => { w.name = str(t.value, 120) || 'Group'; });
     if (e.type === 'click' && t.matches('[data-wu]')) { commit(() => { P.wbs.splice(i, 1); P.wbs.splice(i - 1, 0, w); }); draw(); }
     if (e.type === 'click' && t.matches('[data-wdn]')) { commit(() => { P.wbs.splice(i, 1); P.wbs.splice(i + 1, 0, w); }); draw(); }
+    if (e.type === 'click' && t.matches('[data-wdup]')) { showDupGroup(w.id); return; }
     if (e.type === 'click' && t.matches('[data-wdel]')) { commit(() => { P.wbs = P.wbs.filter((x) => x !== w); P.activities.forEach((a) => { if (a.wbs === w.id) a.wbs = ''; }); }); draw(); }
+  };
+}
+// ---------- duplicate a WBS group (e.g. Car 1 -> Car 3): activities, the links between them, new IDs and names
+function dupGroupPlan(w) {
+  const list = P.activities.filter((a) => a.wbs === w.id), ids = new Set(list.map((a) => a.id));
+  const rx = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // "Car 1 modernization" -> next unused number after the same word: "Car 3 modernization"
+  let name = w.name + ' (copy)', from = '', to = '';
+  const m = w.name.match(/([A-Za-z#]+\s*)(\d+)/);
+  if (m) { const re = new RegExp(rx(m[1]) + '(\\d+)'); let mx = +m[2]; for (const x of P.wbs) { const k = x.name.match(re); if (k) mx = Math.max(mx, +k[1]); } from = m[1] + m[2]; to = m[1] + (mx + 1); name = w.name.replace(from, to); }
+  // IDs: same numbering pattern in the next free thousand (A2000-A2070 -> A5000-A5070), else the next free IDs
+  const nums = list.map((a) => parseInt(a.code.replace(/\D/g, ''), 10)), codes = new Map();
+  let top = 0; for (const a of P.activities) { const n = parseInt(String(a.code).replace(/\D/g, ''), 10); if (Number.isFinite(n)) top = Math.max(top, n); }
+  if (list.length && nums.every(Number.isFinite)) {
+    const base = Math.ceil((top + 1) / 1000) * 1000, ob = Math.floor(Math.min(...nums) / 1000) * 1000;
+    list.forEach((a, i) => codes.set(a.id, (a.code.match(/^[A-Za-z]*/) || [''])[0] + (base + nums[i] - ob)));
+  } else { let n = Math.floor(top / 10) * 10; list.forEach((a) => { n += 10; codes.set(a.id, 'A' + n); }); }
+  const inner = P.relationships.filter((l) => ids.has(l.from) && ids.has(l.to));
+  const starts = list.filter((a) => !inner.some((l) => l.to === a.id)), ends = list.filter((a) => !inner.some((l) => l.from === a.id));
+  return { w, list, ids, name, from, to, codes, inner, starts, ends, rename: (t) => (from ? t.replace(new RegExp(rx(from) + '(?!\\d)', 'g'), to) : t) };
+}
+function showDupGroup(wid) {
+  const w = P.wbs.find((x) => x.id === wid); if (!w) return;
+  const pl = dupGroupPlan(w), cs = [...pl.codes.values()];
+  modal('Duplicate group', '<div class="fg"><label class="f full">Name of the copy<input class="inp" id="dgName" maxlength="120" value="' + esc(pl.name) + '"></label></div>'
+    + '<fieldset class="dg-when"><legend>The copy starts</legend>'
+    + '<label class="chk"><input type="radio" name="dgWhen" value="after" checked> After “' + esc(w.name) + '” finishes <span style="color:var(--muted)">(one after the other, e.g. car by car)</span></label>'
+    + '<label class="chk"><input type="radio" name="dgWhen" value="same"> At the same time <span style="color:var(--muted)">(same predecessors as the original)</span></label></fieldset>'
+    + '<p class="hint" style="margin-top:12px">Copies ' + pl.list.length + ' activit' + (pl.list.length === 1 ? 'y' : 'ies') + ' and the ' + pl.inner.length + ' link' + (pl.inner.length === 1 ? '' : 's') + ' between them'
+    + (cs.length ? ', with new IDs ' + esc(cs[0]) + (cs.length > 1 ? '–' + esc(cs[cs.length - 1]) : '') : '') + '.'
+    + (pl.from ? ' “' + esc(pl.from) + '” becomes “' + esc(pl.to) + '” in activity names.' : '')
+    + ' Links to work after the group (like closeout) are copied too. Progress, actual dates and constraints aren’t copied. Ctrl+Z undoes it.</p>',
+    '<button class="btn" data-close>Cancel</button><button class="btn pri" id="dgGo">Duplicate</button>');
+  modalHandler = (e) => {
+    if (!(e.type === 'click' && e.target.id === 'dgGo')) return;
+    const nm = str($('#dgName').value, 120) || pl.name, when = ($('input[name=dgWhen]:checked') || {}).value || 'after';
+    const seq = P.wbs.every((x, i) => x.code === String(i + 1)); // groups numbered 1, 2, 3…: keep them in order after inserting
+    const nw = { id: uid(), code: seq ? '' : P.wbs.every((x) => /^\d+$/.test(x.code)) ? String(Math.max(0, ...P.wbs.map((x) => +x.code)) + 1) : '', name: nm };
+    const idMap = new Map(pl.list.map((a) => [a.id, uid()]));
+    commit(() => {
+      P.wbs.splice(P.wbs.indexOf(w) + 1, 0, nw); if (seq) P.wbs.forEach((x, i) => { x.code = String(i + 1); });
+      for (const a of pl.list) P.activities.push({ ...a, id: idMap.get(a.id), code: pl.codes.get(a.id), name: pl.rename(a.name), wbs: nw.id, as: '', af: '', pct: 0, rd: a.od, cType: '', cDate: '', notes: '' });
+      const link = (from, to, type, lag) => { if (!P.relationships.some((l) => l.from === from && l.to === to)) P.relationships.push({ id: uid(), from, to, type, lag }); };
+      for (const l of P.relationships.slice()) {
+        const f = pl.ids.has(l.from), t = pl.ids.has(l.to);
+        if (f && t) link(idMap.get(l.from), idMap.get(l.to), l.type, l.lag);
+        else if (f) link(idMap.get(l.from), l.to, l.type, l.lag); // work after the group waits for the copy too
+        else if (t && when === 'same') link(l.from, idMap.get(l.to), l.type, l.lag);
+      }
+      if (when === 'after') for (const e0 of pl.ends) for (const s0 of pl.starts) link(e0.id, idMap.get(s0.id), 'FS', 0);
+    });
+    closeModal(); ui.filter = 'all'; ui.collapsed.delete(nw.id); render();
+    const first = pl.starts[0] || pl.list[0]; if (first) select(idMap.get(first.id), true);
+    toast('Duplicated as “' + nm + '” (' + pl.list.length + ' activities). Ctrl+Z to undo');
   };
 }
 function showFile() {
@@ -2597,7 +2659,7 @@ const inFrame = (() => { try { return window.self !== window.top; } catch (e) { 
 function printOpts() {
   const o = (P.layout && P.layout.print) || {};
   const B = P.layout.bars, def = (v, d) => (v == null ? d : !!v);
-  return { paper: PAPER[o.paper] ? o.paper : 'tabloid', orient: o.orient === 'portrait' ? 'portrait' : 'landscape', scope: ['all', 'view', 'crit', 'open'].includes(o.scope) ? o.scope : 'view',
+  return { paper: PAPER[o.paper] ? o.paper : 'tabloid', orient: o.orient === 'portrait' ? 'portrait' : 'landscape', scope: ['all', 'view', 'crit', 'open', 'look'].includes(o.scope) ? o.scope : 'view',
     density: ['compact', 'normal', 'roomy'].includes(o.density) ? o.density : 'normal', links: o.links == null ? P.layout.links : !!o.links, footer: o.footer == null ? true : !!o.footer,
     company: str(o.company, 80), title: str(o.title, 120), rev: str(o.rev, 80), note: str(o.note, 300),
     hfont: fontKey(o.hfont, 'helvetica'), hweight: weightKey(o.hweight, 'bold'), hsize: ptSize(o.hsize, 8, 28, 12), nfont: fontKey(o.nfont, 'helvetica'), nweight: weightKey(o.nweight, 'bold'), nsize: ptSize(o.nsize, 6, 28, 8.5), from: dt(o.from), to: dt(o.to),
@@ -2609,7 +2671,7 @@ function rowsFor(scope, groups = true) {
   let r;
   if (scope === 'view') r = buildRows();
   else {
-    const keep = { f: ui.filter, q: ui.q, c: new Set(ui.collapsed) }; ui.filter = scope === 'crit' ? 'crit' : scope === 'open' ? 'open' : 'all'; ui.q = ''; ui.collapsed.clear();
+    const keep = { f: ui.filter, q: ui.q, c: new Set(ui.collapsed) }; ui.filter = scope === 'crit' ? 'crit' : scope === 'open' ? 'open' : scope === 'look' ? 'look' : 'all'; ui.q = ''; ui.collapsed.clear();
     r = buildRows(); ui.filter = keep.f; ui.q = keep.q; ui.collapsed = keep.c;
   }
   return groups ? r : r.filter((x) => !x.g);
@@ -2870,7 +2932,7 @@ function showPrint() {
     return '<div class="pv-sec"><h4>Page</h4><label class="f">Paper' + sel('paper', Object.entries(PAPER).map(([k2, [l]]) => [k2, l])) + '</label>'
       + '<div class="pv-row"><span>Orientation</span>' + seg('orient', [['landscape', 'Landscape'], ['portrait', 'Portrait']], 'Orientation') + '</div>'
       + '<div class="pv-row"><span>Rows</span>' + seg('density', [['compact', 'Compact'], ['normal', 'Normal'], ['roomy', 'Roomy']], 'Row spacing') + '</div></div>'
-      + '<div class="pv-sec"><h4>Activities</h4>' + sel('scope', [['all', 'All activities'], ['view', 'As shown on screen (filter & collapsed groups)'], ['crit', 'Critical activities only'], ['open', 'Not yet complete']], 'Which activities to print')
+      + '<div class="pv-sec"><h4>Activities</h4>' + sel('scope', [['all', 'All activities'], ['view', 'As shown on screen (filter & collapsed groups)'], ['crit', 'Critical activities only'], ['open', 'Not yet complete'], ['look', '3-week look-ahead (from the data date)']], 'Which activities to print')
       + chk('groups', 'WBS group rows') + '</div>'
       + '<div class="pv-sec"><h4>Show on the chart</h4>' + chk('links', 'Logic lines') + chk('bl', 'Baseline bars', !P.baseline, P.baseline ? '' : '(no baseline saved)') + chk('prog', 'Progress bars') + chk('float', 'Float bars')
       + chk('nonwork', 'Shade non-work days') + chk('ddline', 'Data date line') + chk('footer', 'Legend & title block')
@@ -3295,6 +3357,8 @@ setTimeout(spellInit, 300);
 $('#grid').addEventListener('click', (e) => {
   if (e.target.closest('[data-rz]')) return;
   if (e.target.closest('[data-showall]')) { ui.q = ''; $('#q').value = ''; ui.filter = 'all'; ui.collapsed.clear(); render(); return; }
+  // a blank row below the list: add an activity after the last one shown (Insert does the same from the keyboard)
+  if (e.target.closest('tr.fill')) { const last = [...$$('#grid tr.act')].pop(); ui.sel = last ? last.dataset.id : null; addActivity('task'); return; }
   const g = e.target.closest('tr.g'); if (g) { const id = g.dataset.g; ui.collapsed.has(id) ? ui.collapsed.delete(id) : ui.collapsed.add(id); render(); return; }
   const tr = e.target.closest('tr.act'); if (!tr) return;
   const td = e.target.closest('td');

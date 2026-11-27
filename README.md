@@ -19,7 +19,7 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Accessibility: WCAG 2.2 AA contrast in both themes (checked with axe-core), labeled controls, keyboard focus kept in dialogs, and a color-blind-safe bar preset
 - Activity table grouped by WBS, with inline editing (click a cell, then Enter or Tab)
 - Gantt chart with critical path, progress, float, baselines and logic lines
-- Activity table and Gantt run to the bottom of the window with blank ruled rows below the last activity, as in SureTrak
+- Activity table and Gantt run to the bottom of the window with blank ruled rows below the last activity, as in SureTrak; click one to add an activity
 - Drag from a bar's end to another bar to link them, or drag a bar's edge to change its duration
 - Detail panel for dates, progress, constraints, predecessors and successors (with driving links marked) and notes
 - **Why these dates:** the detail panel traces the driving path back to where it starts, says how far the activity is behind the baseline, and names the activities that caused the delay (e.g. "duration grew from 45 to 50 days, +10d"). In the Claude-hosted version, **Suggest ways to recover** hands that path to the assistant
@@ -28,7 +28,10 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - **Go to anything (Ctrl+K):** type any command ("calendar", "baseline", "update") or an activity ID or name and press Enter
 - Schedule check for logic loops, open ends, negative float, out-of-sequence progress and bad actual dates
 - Baseline (target) with a variance column and a finish variance in the toolbar
-- Filters (critical, incomplete, issues), search, Day/Week/Month zoom, undo and redo
+- Filters (critical, incomplete, issues, 3-week look-ahead), search, Day/Week/Month zoom, undo and redo
+  - **Look-ahead** shows work underway or starting in the 3 weeks after the data date; Print preview can print it too
+- **Duplicate a group** (Project settings → Duplicate, or Ctrl+K): copies a WBS group's activities and the links between them, with new IDs in the next free thousand (A2000 → A5000), the number in the name moved on ("Car 2" → "Car 3"), and the copy starting after the original or at the same time
+- Click a blank row under the last activity to add one, linked after the last activity shown
 - Deletes and bar drags happen immediately with an **Undo** button in the confirmation message, instead of "are you sure?" dialogs
 - Dragging a bar's edge shows the new duration and finish date as you drag
 - The autosave status under the project name only says "Autosaved" when the save actually worked, and warns if the browser blocks storage
