@@ -16,7 +16,8 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 
 **Interface**
 - **Design system:** graphite chrome, one cobalt accent, and color only where it means something (critical, warnings, OK). Every color, size, radius and shadow is a token, with light and dark designed together. See the [OpenTrak design system](https://claude.ai/artifact/1xezTxVZBu8Ld4E67crD4u)
-- **One command bar:** the project name with a status line under it (data date, Update progress, finish, baseline variance, schedule check, autosave), view controls (filter, activity list, Table/Split/Gantt, Day/Week/Month, a **Show** menu for logic, float and baseline bars plus the legend) and actions (undo, redo, print, **+ Activity** with Milestone and New project in its menu). On screens under 1600px wide the view controls sit in a slim second row
+- **Everything in reach:** the header shows the project status (data date, Update progress, finish, baseline variance) and the main actions (Undo, Redo, Check, Print / PDF, Milestone, + Activity); the toolbar row below keeps every view option one click away: search, All / Critical / Incomplete / Issues, Table / Split / Gantt, Day / Week / Month, Logic / Float / Baseline and the legend
+- **Accessible controls:** in both themes every button and switch has a clearly visible edge (3:1 contrast), and the selected option in each group is marked with a cobalt outline, tint and bold text
 - Graphite dark theme by default with a light theme toggle; IBM Plex Sans embedded so it works offline
 - Accessibility: WCAG 2.2 AA contrast in both themes (checked with axe-core), labeled controls, keyboard focus kept in dialogs, and a color-blind-safe bar preset
 - Activity table grouped by WBS, with inline editing (click a cell, then Enter or Tab)
