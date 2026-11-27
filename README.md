@@ -56,7 +56,8 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
   - Chart: logic lines, baseline, progress and float bars, non-work day shading, data date line, legend and title block, and the label beside each bar
   - Columns for printing, separate from the screen (or the same as the screen by default), and an optional timescale range
   - Title, company / prepared by, and a revision note such as "Rev 2 — overtime option" printed in the page header
-  - A **footer note** printed in bold in the middle of the footer on every page (e.g. work-hour assumptions or exclusions)
+  - A **footer note** printed in the middle of the footer on every page (e.g. work-hour assumptions or exclusions)
+  - Font family (Helvetica, Times, Courier, or Calibri via the metric-compatible Carlito font), weight (regular or bold) and size (up to 28pt) for the page header and for the footer note; the header and footer grow to fit larger text
   - Saves a vector PDF (sharp at any size) or sends it to the printer. Settings are remembered with the project
 - CSV export for Excel, protected against spreadsheet formula injection
 - Project files are saved as `.json`, and work also autosaves in the browser
@@ -84,7 +85,7 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 ## Development
 
 ```bash
-npm install      # jsPDF, IBM Plex Sans, nspell + dictionary, esbuild (build only)
+npm install      # jsPDF, IBM Plex Sans, Carlito, nspell + dictionary, esbuild (build only)
 npm test         # CPM engine unit tests
 npm run build    # writes dist/opentrak.html
 ```
@@ -102,7 +103,7 @@ npm run build    # writes dist/opentrak.html
 - **Opened files are untrusted.** Every project file is rebuilt field by field through a sanitizer: types are checked, lengths and counts are capped, and dates are validated. Unknown fields are dropped.
 - **No unescaped HTML.** All user text is escaped before it reaches the page; nothing is evaluated.
 - **CSV export** neutralizes cells that start with `= + - @` so Excel won't run them as formulas.
-- **Pinned dependencies, bundled at build time:** jsPDF 2.5.2 (MIT), IBM Plex Sans (SIL OFL 1.1), nspell 2.1.5 (MIT) and the en_US Hunspell dictionary from SCOWL (MIT and BSD).
+- **Pinned dependencies, bundled at build time:** jsPDF 2.5.2 (MIT), IBM Plex Sans (SIL OFL 1.1), Carlito (SIL OFL 1.1; Calibri-compatible, embedded in a PDF only when chosen), nspell 2.1.5 (MIT) and the en_US Hunspell dictionary from SCOWL (MIT and BSD).
 
 ## Roadmap
 
