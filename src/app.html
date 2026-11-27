@@ -8,33 +8,64 @@
 <style>
 /*FONTS*/
 :root{
+  /* ===== OpenTrak semantic tokens =====
+     Components use these names only. Dark values are the owner's refined palette; light mode follows the same rules.
+     Small adjustments for WCAG AA are noted inline. */
   --font:"IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   --row:28px; --head-h:48px; --fs:12px; /* --head-h: table header height = Gantt timescale height (HH), so rows line up */
-  --r-sm:6px; --r:8px; --r-lg:14px;
-  --accent:#4c8dff; --accent-ink:#fff; --accent-hover:#3a7bf0;
-  --ok:#3ecf6e; --warn:#f5b83d; --bad:#ff5a5f; --violet:#a78bfa; --teal:#2dd4bf; --sky:#60a5fa; --amber:#f5b83d; --slate:#94a3b8;
+  --r-sm:4px; --r:6px; --r-lg:10px;
 }
 :root[data-theme="dark"]{
   color-scheme: dark;
-  --bg:#10151c; --rail:#0d1218; --panel:#161c25; --panel-2:#1b2230; --raised:#212a38; --field:#121821;
-  --line:#263142; --line-2:#1e2735; --text:#e6ebf2; --muted:#8e9aac; --faint:#7f8ca0;
-  --head:#1b2230; --group:#1e2633; --group-ink:#cdd6e3; --hover:rgba(76,141,255,.06); --sel:rgba(76,141,255,.16); --sel-line:#4c8dff;
-  --nonwork:rgba(255,255,255,.025); --grid:#202938; --dd:#38bdf8; --link:#7c8799; --ms-stroke:rgba(0,0,0,.55);
-  --accent-fg:#6ea4ff; --accent-glow:rgba(76,141,255,.28); --field-line:#617089; --tint-sky:rgba(96,165,250,.14);
-  --accent:#2f6fe4; --accent-hover:#2862cf;
-  --shadow:0 18px 50px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
-  --tint-accent:rgba(76,141,255,.14); --tint-violet:rgba(167,139,250,.14); --tint-ok:rgba(62,207,110,.13); --tint-warn:rgba(245,184,61,.14); --tint-bad:rgba(255,90,95,.14); --tint-slate:rgba(148,163,184,.12);
+  --ot-bg:#10141B;            /* application background (rail) */
+  --ot-surface:#171C24;       /* main workspace: table, Gantt */
+  --ot-surface-2:#1C222C;     /* header, toolbar, panels, group rows */
+  --ot-raised:#1F2631;        /* dialogs, toasts */
+  --ot-field:#141920;         /* inside inputs */
+  --ot-hover:#252D39;
+  --ot-selected:#20334D;
+  --ot-border:#2B3441;        /* default border between regions */
+  --ot-border-subtle:#212833; /* table grid lines */
+  --ot-border-input:#5F6A7D;  /* input edges: 3.1:1 so fields stay visible (AA non-text) */
+  --ot-text:#E4E8EF; --ot-text-2:#A3ADBD; --ot-text-3:#8894A6;
+  --ot-accent:#4C82ED;        /* focus, active navigation, data date, highlights */
+  --ot-accent-fill:#3A6DD8;   /* filled primary button: white text needs 4.5:1 (#4C82ED gives 3.7) */
+  --ot-accent-fill-hover:#3463C7;
+  --ot-accent-text:#7AA2F4;   /* accent used as text: 4.5:1+ on every surface including the selected row */
+  --ot-accent-tint:rgba(76,130,237,.16);
+  --ot-success:#42B883; --ot-warning:#D9A441; --ot-critical:#E56464;
+  --ot-critical-strong:#F08585; /* critical text on the selected row (5.1:1) */
+  --ot-milestone:#A094D6;
+  --ot-success-tint:rgba(66,184,131,.13); --ot-warning-tint:rgba(217,164,65,.13); --ot-critical-tint:rgba(229,100,100,.13);
+  --ot-gantt-activity:#7189AE; --ot-gantt-critical:#E56464; --ot-gantt-progress:#42B883; --ot-gantt-baseline:#8894A6;
+  --ot-gantt-milestone:#A094D6; --ot-gantt-summary:#A3ADBD; --ot-gantt-float:#5F6A7D; --ot-gantt-link:#6B7688;
+  --ot-nonwork:rgba(255,255,255,.018); --ot-grid:#1F2630;
+  --ot-shadow:0 12px 32px rgba(0,0,0,.35);
 }
 :root[data-theme="light"]{
   color-scheme: light;
-  --bg:#eef1f5; --rail:#ffffff; --panel:#ffffff; --panel-2:#f6f8fb; --raised:#ffffff; --field:#ffffff;
-  --line:#dfe4eb; --line-2:#edf0f4; --text:#18202b; --muted:#5f6b7c; --faint:#6b7686;
-  --head:#f6f8fb; --group:#eef2f7; --group-ink:#253041; --hover:rgba(37,99,235,.04); --sel:rgba(37,99,235,.10); --sel-line:#2563eb;
-  --nonwork:rgba(15,23,42,.035); --grid:#eceff3; --dd:#0284c7; --link:#7a8597; --ms-stroke:rgba(0,0,0,.6);
-  --accent-fg:#1d4ed8; --accent-glow:rgba(37,99,235,.25); --field-line:#8a95a5; --tint-sky:rgba(2,132,199,.10);
-  --accent:#2563eb; --accent-hover:#1d4ed8; --ok:#157a3a; --warn:#a74c08; --bad:#b91c1c; --violet:#7c3aed; --teal:#0d9488; --sky:#0284c7; --amber:#d97706; --slate:#64748b;
-  --shadow:0 18px 50px rgba(15,23,42,.18), 0 2px 8px rgba(15,23,42,.08);
-  --tint-accent:rgba(37,99,235,.10); --tint-violet:rgba(124,58,237,.10); --tint-ok:rgba(22,163,74,.10); --tint-warn:rgba(217,119,6,.12); --tint-bad:rgba(220,38,38,.10); --tint-slate:rgba(100,116,139,.10);
+  --ot-bg:#F3F5F8; --ot-surface:#FFFFFF; --ot-surface-2:#F7F8FA; --ot-raised:#FFFFFF; --ot-field:#FFFFFF;
+  --ot-hover:#EDF0F4; --ot-selected:#E2EBFA;
+  --ot-border:#DFE4EA; --ot-border-subtle:#ECEFF3; --ot-border-input:#8A94A3;
+  --ot-text:#1A202B; --ot-text-2:#4D5868; --ot-text-3:#646E7D;
+  --ot-accent:#2F66D6; --ot-accent-fill:#2F66D6; --ot-accent-fill-hover:#2757BC; --ot-accent-text:#2F66D6; --ot-accent-tint:rgba(47,102,214,.10);
+  --ot-success:#1D7A52; --ot-warning:#8A5F0E; --ot-critical:#C13838; --ot-critical-strong:#A82E2E; --ot-milestone:#6B5BBD;
+  --ot-success-tint:rgba(29,122,82,.09); --ot-warning-tint:rgba(138,95,14,.10); --ot-critical-tint:rgba(193,56,56,.08);
+  --ot-gantt-activity:#6E86AD; --ot-gantt-critical:#D45454; --ot-gantt-progress:#2E9B6A; --ot-gantt-baseline:#9AA3B2;
+  --ot-gantt-milestone:#7B6CC8; --ot-gantt-summary:#4D5868; --ot-gantt-float:#B9C1CC; --ot-gantt-link:#8A94A3;
+  --ot-nonwork:rgba(15,23,42,.03); --ot-grid:#EEF1F5;
+  --ot-shadow:0 12px 32px rgba(15,23,42,.12);
+}
+:root[data-theme]{
+  /* names used throughout the components → tokens */
+  --bg:var(--ot-bg); --rail:var(--ot-bg); --panel:var(--ot-surface); --panel-2:var(--ot-surface-2); --raised:var(--ot-raised); --field:var(--ot-field);
+  --line:var(--ot-border); --line-2:var(--ot-border-subtle); --line2:var(--ot-grid); --text:var(--ot-text); --muted:var(--ot-text-2); --faint:var(--ot-text-3);
+  --head:var(--ot-surface-2); --group:var(--ot-surface-2); --group-ink:var(--ot-text); --hover:var(--ot-hover); --sel:var(--ot-selected); --sel-line:var(--ot-accent);
+  --nonwork:var(--ot-nonwork); --grid:var(--ot-grid); --dd:var(--ot-accent); --link:var(--ot-gantt-link); --ms-stroke:transparent;
+  --accent:var(--ot-accent-fill); --accent-hover:var(--ot-accent-fill-hover); --accent-ink:#fff; --accent-fg:var(--ot-accent-text); --accent-glow:transparent; --field-line:var(--ot-border-input);
+  --ok:var(--ot-success); --warn:var(--ot-warning); --bad:var(--ot-critical); --violet:var(--ot-milestone); --teal:var(--ot-text-2); --sky:var(--ot-accent-text); --amber:var(--ot-warning); --slate:var(--ot-text-2);
+  --tint-accent:var(--ot-accent-tint); --tint-sky:var(--ot-accent-tint); --tint-violet:var(--ot-hover); --tint-slate:var(--ot-hover); --tint-ok:var(--ot-success-tint); --tint-warn:var(--ot-warning-tint); --tint-bad:var(--ot-critical-tint);
+  --shadow:var(--ot-shadow);
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -333,6 +364,95 @@ input[type=color]{background:var(--field)!important}
 @media (max-width: 1400px){.acts .btn .lbl-lg{display:none}.acts .btn:has(.lbl-lg){width:34px;padding:0;justify-content:center}}
 @media (max-width: 1240px){#sVarW{display:none!important}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ================= Visual refinement (semantic tokens above) ================= */
+html,body{font-feature-settings:"tnum" 1}
+/* sidebar: one neutral icon color, accent for the open tool */
+.rail{background:var(--ot-bg);border-right-color:var(--ot-border)}
+.mark{background:var(--ot-surface-2)!important;border-color:var(--ot-border)}
+.rb,.rb[data-c] svg{color:var(--ot-text-3)!important}
+.rb{border-radius:var(--r)}
+.rb:hover{background:var(--ot-hover)} .rb:hover svg,.rb:hover{color:var(--ot-text)!important}
+.rb.on{background:var(--ot-accent-tint)} .rb.on,.rb.on svg{color:var(--ot-accent)!important}
+.rb::after{border-radius:var(--r);box-shadow:var(--ot-shadow);background:var(--ot-raised);font-size:12px}
+/* header and toolbar: one flat surface, lighter controls, consistent 30px height */
+.hdr,.tb{background:var(--ot-surface-2);border-bottom-color:var(--ot-border)}
+.hdr{min-height:56px;padding:8px 16px;gap:12px}
+.tb{padding:8px 16px;gap:8px}
+.pname{font-size:15px;font-weight:600}
+.title small{color:var(--ot-text-3)}
+.pills{gap:4px}
+.pill{height:30px;border-radius:var(--r);background:transparent;border:1px solid transparent;color:var(--ot-text-2);padding:0 8px;font-size:12px}
+.pill b{color:var(--ot-text);font-weight:500}
+.pill:has(input){border-color:var(--ot-border)} .pill:has(input):hover{border-color:var(--ot-border-input)}
+.pill input[type=date]{color:var(--ot-text);font-weight:500}
+.pill.bad{background:var(--ot-critical-tint);color:var(--ot-critical-strong)} .pill.bad b{color:var(--ot-critical-strong)}
+.pill.ok{background:var(--ot-success-tint);color:var(--ot-success)} .pill.ok b{color:var(--ot-success)}
+.btn{height:30px;padding:0 10px;gap:6px;border-radius:var(--r);background:transparent;border:1px solid var(--ot-border);color:var(--ot-text);font-size:13px;font-weight:500;box-shadow:none;transition:background .12s,border-color .12s}
+.btn:hover{background:var(--ot-hover);border-color:var(--ot-border)}
+.btn:active{transform:none}
+.btn.sm{height:26px;font-size:12px}
+.btn.ghost{border-color:transparent;color:var(--ot-text-2)} .btn.ghost:hover{color:var(--ot-text);background:var(--ot-hover)}
+.btn.pri{background:var(--ot-accent-fill);border-color:var(--ot-accent-fill);color:#fff;box-shadow:none} .btn.pri:hover{background:var(--ot-accent-fill-hover);border-color:var(--ot-accent-fill-hover)}
+.btn.violet,.btn.slate,.btn.sky,.btn.okc,.btn.warnc,.btn.badc{background:transparent;border-color:var(--ot-border);color:var(--ot-text);filter:none}
+.btn.violet:hover,.btn.slate:hover,.btn.sky:hover,.btn.okc:hover,.btn.warnc:hover,.btn.badc:hover{background:var(--ot-hover);filter:none}
+.btn.violet svg{color:var(--ot-milestone)} .btn.sky svg{color:var(--ot-accent-text)} .btn.slate svg{color:var(--ot-text-2)}
+.btn.okc svg{color:var(--ot-success)} .btn.warnc svg{color:var(--ot-warning)} .btn.badc svg{color:var(--ot-critical)}
+.badge{min-width:18px;height:18px;border-radius:5px;font-size:11px}
+.btn.okc .badge{background:var(--ot-success)} .btn.warnc .badge{background:var(--ot-warning)} .btn.badc .badge{background:var(--ot-critical)}
+.badge>span{color:var(--ot-surface)}
+.btn.danger{background:transparent;color:var(--ot-critical)} .btn.danger:hover{background:var(--ot-critical-tint)}
+.btn.on{background:var(--ot-accent-tint);border-color:transparent;color:var(--ot-accent-text)}
+.tb .btn{height:30px}
+.vr{background:var(--ot-border);height:20px}
+/* segmented controls: flat track; the selected option is a blue tint with a ring and bold text */
+.seg{padding:2px;gap:2px;border-radius:var(--r);background:transparent;border:1px solid var(--ot-border)}
+.seg button{height:24px;padding:0 9px;border-radius:var(--r-sm);font-size:12.5px;font-weight:500;color:var(--ot-text-2)}
+.seg button:hover{color:var(--ot-text);background:var(--ot-hover)}
+.seg button.on,:root[data-theme="light"] .seg button.on{background:var(--ot-selected);color:var(--ot-text);font-weight:600;box-shadow:inset 0 0 0 1px var(--ot-accent)}
+.sw{font-size:12.5px;color:var(--ot-text-2);gap:6px}
+.sw:has(input:checked){color:var(--ot-text)}
+.sw input{background:var(--ot-border-input)} .sw input:checked{background:var(--ot-accent-fill)}
+.sw input:focus-visible{outline:2px solid var(--ot-accent);outline-offset:2px}
+.legend{color:var(--ot-text-2);font-size:12px}
+/* inputs: quiet edges, clear hover and focus */
+.search input,.inp,select.sel{height:30px;border:1px solid var(--ot-border-input);border-radius:var(--r);background:var(--ot-field);color:var(--ot-text);font-size:13px}
+.inp,select.sel{height:32px}
+textarea.inp{height:auto}
+.search input{height:30px;width:210px}
+.search input:hover,.inp:hover,select.sel:hover{border-color:var(--ot-text-3)}
+.search input:focus,.inp:focus,select.sel:focus{outline:none;border-color:var(--ot-accent);box-shadow:0 0 0 3px var(--ot-accent-tint)}
+.search input::placeholder,.inp::placeholder{color:var(--ot-text-3)}
+:focus-visible{outline:2px solid var(--ot-accent);outline-offset:2px}
+/* table: quiet grid, names never red, readable completed rows */
+.grid th{background:var(--ot-surface-2);border-bottom:1px solid var(--ot-border);border-right:0;box-shadow:inset -1px 0 0 var(--ot-border-subtle);font-size:11.5px;font-weight:500;color:var(--ot-text-3)}
+.grid td{border-bottom:1px solid var(--ot-border-subtle);color:var(--ot-text)}
+.grid td.c-code{color:var(--ot-text-3)}
+.grid tr.crit td.c-name,.grid tr.sel.crit td.c-name{color:var(--ot-text)}
+.grid tr.done td{color:var(--ot-text-2)}
+.grid tr.done td.c-code{color:var(--ot-text-3)}
+.grid tr.act:hover td{background:var(--ot-hover)}
+.grid tr.sel td{background:var(--ot-selected)!important}
+.grid tr.sel td:first-child{box-shadow:inset 2px 0 0 var(--ot-accent)}
+.grid tr.sel td.c-code,.grid tr.sel.done td{color:var(--ot-text-2)}
+.grid tr.sel .neg{color:var(--ot-critical-strong)}
+.grid tr.g td{background:var(--ot-surface-2);color:var(--ot-text);border-bottom-color:var(--ot-border);font-weight:600}
+.neg{color:var(--ot-critical);font-weight:600} .pos{color:var(--ot-success)}
+.grid td.c-name .dot{width:6px;height:6px;border-radius:50%;margin-right:9px}
+.dms{width:7px;height:7px}
+.a{color:var(--ot-text-3)}
+.split::after{inset:0 3px}
+/* panels, dialogs, toasts: flat, bordered, one soft shadow for floating layers only */
+.drawer{background:var(--ot-surface);border-left-color:var(--ot-border);box-shadow:none}
+.drawer:not(.open){visibility:hidden;transition:transform .2s cubic-bezier(.2,.8,.2,1),visibility 0s .2s}
+.dh{border-bottom-color:var(--ot-border)}
+.sec{border-bottom-color:var(--ot-border-subtle)}
+.modal{background:var(--ot-raised);border-color:var(--ot-border);border-radius:var(--r-lg);box-shadow:var(--ot-shadow)}
+.mh,.mf{border-color:var(--ot-border)}
+.ov{backdrop-filter:none;background:rgba(8,10,14,.55)} :root[data-theme="light"] .ov{background:rgba(15,23,42,.25)}
+.toast{background:var(--ot-raised);border-color:var(--ot-border);border-radius:var(--r);box-shadow:var(--ot-shadow)}
+.chip,.calcard,.hol,.wd label,.issue{border-radius:var(--r)}
+.calcard{background:var(--ot-surface-2)}
 </style>
 </head>
 <body>
@@ -626,7 +746,7 @@ function sample() {
 function blank() {
   const s = today();
   return sanitize({ format: 'opentrak', name: 'New project', startDate: s, dataDate: s, calendars: defaultCals(), defaultCal: 'std5',
-    wbs: [{ id: uid(), code: '1', name: 'General' }], activities: [], relationships: [] });
+    wbs: [], activities: [], relationships: [] }); // no automatic group: activities are a plain list until you add WBS groups
 }
 
 // ---------- state
@@ -663,6 +783,7 @@ const calById = (id) => P.calendars.find((c) => c.id === id) || P.calendars.find
 const engCal = (a) => CPM.makeCal(calById(a.cal));
 
 function nextCode(prefix = 'A') {
+  if (!P.activities.length) return prefix + '1000'; // SureTrak-style numbering for a new project
   let m = 0; for (const a of P.activities) { const n = parseInt(String(a.code).replace(/\D/g, ''), 10); if (Number.isFinite(n)) m = Math.max(m, n); }
   return prefix + (Math.floor(m / 10) * 10 + 10);
 }
@@ -685,6 +806,7 @@ function buildRows() {
   const groups = [...P.wbs.map((w) => ({ w, list: [] })), { w: { id: '', code: '', name: 'Unassigned' }, list: [] }];
   const gm = new Map(groups.map((g) => [g.w.id, g]));
   for (const a of P.activities) (gm.get(a.wbs) || gm.get('')).list.push(a);
+  if (!P.wbs.length) { for (const a of groups[groups.length - 1].list.filter(pass).sort(cmp)) out.push({ a }); return out; }
   for (const g of groups) {
     const list = g.list.filter(pass).sort(cmp);
     if (!list.length && (g.w.id === '' || q || ui.filter !== 'all')) continue;
@@ -713,7 +835,7 @@ function cellHtml(c, a, r) {
     case 'code': return esc(a.code);
     case 'name': {
       const stx = r.status === 'done' ? 'Complete' : (r.critical ? 'Critical' : 'Non-critical') + (r.status === 'active' ? ', in progress' : '');
-      const ic = a.type === 'task' ? '<span class="dot ' + (r.status === 'done' ? 'done' : r.critical ? 'crit' : r.status === 'active' ? 'active' : '') + '" role="img" aria-label="' + stx + '" title="' + stx + '"></span>' : '<span class="dms" role="img" aria-label="Milestone, ' + stx + '" title="Milestone, ' + stx + '" style="background:' + esc(sc(r.status === 'done' ? P.layout.bars.progress.color : r.critical ? P.layout.bars.critical.color : P.layout.bars.milestone.color)) + '"></span>';
+      const ic = a.type === 'task' ? '<span class="dot ' + (r.status === 'done' ? 'done' : r.critical ? 'crit' : r.status === 'active' ? 'active' : '') + '" role="img" aria-label="' + stx + '" title="' + stx + '"></span>' : '<span class="dms" role="img" aria-label="Milestone, ' + stx + '" title="Milestone, ' + stx + '" style="background:' + esc((({ progress: pc, critical: cc, milestone: mc }) => r.status === 'done' ? pc.color : r.critical ? cc.color : mc.color)(screenBars(P.layout.bars))) + '"></span>';
       return ic + markSpell(a.name);
     }
     case 'od': return a.type === 'task' ? a.od : '0';
@@ -1259,7 +1381,7 @@ document.addEventListener('keydown', (e) => {
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   else if (!$('.modal').contains(document.activeElement)) { e.preventDefault(); first.focus(); }
 });
-function closeModal() { $('.modal').style.width = ''; $('.modal').classList.remove('cmdk', 'pv'); $('#mFoot').hidden = false; $('.modal').classList.remove('cmdk'); $('#mFoot').hidden = false; $('#ov').classList.remove('open'); $('#mBody').innerHTML = ''; modalHandler = null; if (modalReturn && document.contains(modalReturn)) { try { modalReturn.focus(); } catch (e) { /* ignore */ } } modalReturn = null; }
+function closeModal() { $$('.rail .rb.on').forEach((b) => { b.classList.remove('on'); b.removeAttribute('aria-current'); }); $('.modal').style.width = ''; $('.modal').classList.remove('cmdk', 'pv'); $('#mFoot').hidden = false; $('.modal').classList.remove('cmdk'); $('#mFoot').hidden = false; $('#ov').classList.remove('open'); $('#mBody').innerHTML = ''; modalHandler = null; if (modalReturn && document.contains(modalReturn)) { try { modalReturn.focus(); } catch (e) { /* ignore */ } } modalReturn = null; }
 let modalHandler = null;
 function confirmBox(title, text, okLabel, fn) {
   modal(title, '<p style="margin:0;line-height:1.5">' + esc(text) + '</p>', '<button class="btn" data-close>Cancel</button><button class="btn pri" id="cOk">' + esc(okLabel) + '</button>');
@@ -1490,7 +1612,7 @@ function showCalendars() {
   const draw = () => {
     $('#mBody').innerHTML = P.calendars.map((c) => {
       const used = P.activities.filter((a) => a.cal === c.id).length;
-      return '<div class="calcard" data-cal="' + esc(c.id) + '"><div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><input class="inp" data-cn value="' + esc(c.name) + '" maxlength="80" style="flex:1">'
+      return '<div class="calcard" data-cal="' + esc(c.id) + '"><div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><input class="inp" data-cn value="' + esc(c.name) + '" maxlength="80" style="flex:1" aria-label="Calendar name">'
         + '<label class="chk"><input type="radio" name="defcal" data-cdef ' + (P.defaultCal === c.id ? 'checked' : '') + '> Default</label>'
         + (P.calendars.length > 1 && P.defaultCal !== c.id ? '<button class="x" data-cdel title="Delete calendar">×</button>' : '') + '</div>'
         + '<div class="wd">' + ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => '<label><input type="checkbox" data-wd="' + i + '" ' + (c.workDays[i] ? 'checked' : '') + '>' + d + '</label>').join('') + '</div>'
@@ -1500,7 +1622,7 @@ function showCalendars() {
         + '<label class="chk" style="margin-left:auto"><input type="checkbox" data-hobs ' + (c.observe !== false ? 'checked' : '') + '> Weekend holidays move to Fri / Mon</label></div>'
         + holPreview(c)
         + '<div class="holhead" style="margin-top:12px"><b>Other non-work days</b><span class="hint">One-off dates (shutdowns, building restrictions).</span></div>'
-        + '<div class="addrow"><input type="date" class="inp" data-hd style="max-width:170px"><button class="btn sm" data-hadd>Add non-work day</button></div>'
+        + '<div class="addrow"><input type="date" class="inp" data-hd style="max-width:170px" aria-label="Non-work day to add"><button class="btn sm" data-hadd>Add non-work day</button></div>'
         + '<div class="chips">' + (c.holidays.length ? c.holidays.map((h) => '<span class="chip">' + esc(fmt(h)) + '<button class="x" data-hdel="' + esc(h) + '">×</button></span>').join('') : '<span class="hint">None</span>') + '</div>'
         + '<div class="hint">' + used + ' activit' + (used === 1 ? 'y uses' : 'ies use') + ' this calendar' + (P.defaultCal === c.id ? ' (plus every activity set to the project default)' : '') + '.</div></div>';
     }).join('') + '<button class="btn" data-cadd>＋ New calendar</button>';
@@ -1528,7 +1650,7 @@ function showProject() {
       + '<label class="f">Data date (status date)<input class="inp" type="date" data-pf="dataDate" value="' + P.dataDate + '"></label>'
       + '<label class="f">Must finish by (optional)<input class="inp" type="date" data-pf="mustFinishBy" value="' + P.mustFinishBy + '"></label>'
       + '<label class="f">Critical if total float ≤<input class="inp" type="number" data-pf="critThreshold" value="' + P.critThreshold + '"></label></div>'
-      + '<div class="sec" style="margin-top:16px"><h4>WBS / groups</h4>' + P.wbs.map((w, i) => '<div class="wbsrow" data-w="' + esc(w.id) + '"><input class="inp" data-wc value="' + esc(w.code) + '" placeholder="Code" maxlength="30" style="width:70px"><input class="inp" data-wn value="' + esc(w.name) + '" maxlength="120"><button class="btn sm ghost" data-wu ' + (i ? '' : 'disabled') + ' title="Move up">↑</button><button class="btn sm ghost" data-wdn ' + (i < P.wbs.length - 1 ? '' : 'disabled') + ' title="Move down">↓</button><button class="x" data-wdel title="Delete group">×</button></div>').join('')
+      + '<div class="sec" style="margin-top:16px"><h4>WBS / groups</h4>' + P.wbs.map((w, i) => '<div class="wbsrow" data-w="' + esc(w.id) + '"><input class="inp" data-wc value="' + esc(w.code) + '" placeholder="Code" maxlength="30" style="width:70px" aria-label="WBS code"><input class="inp" data-wn value="' + esc(w.name) + '" maxlength="120" aria-label="WBS group name"><button class="btn sm ghost" data-wu ' + (i ? '' : 'disabled') + ' title="Move up">↑</button><button class="btn sm ghost" data-wdn ' + (i < P.wbs.length - 1 ? '' : 'disabled') + ' title="Move down">↓</button><button class="x" data-wdel title="Delete group">×</button></div>').join('')
       + '<button class="btn sm" data-wadd>＋ Add group</button><div class="hint">Deleting a group moves its activities to “Unassigned”.</div></div>';
   };
   modal('Project settings', '', '<button class="btn pri" data-close>Done</button>'); draw();
@@ -1627,7 +1749,7 @@ function showBars() {
       + '<label class="f">Label left of bar<select class="sel" data-b="labelL">' + Object.entries(LABELS).map(([k, l]) => '<option value="' + k + '"' + (B.labelL === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
       + '<label class="f">Row height (' + P.layout.rowH + 'px)<input type="range" min="20" max="48" value="' + P.layout.rowH + '" data-l="rowH"></label>'
       + '<label class="f">Text size (' + P.layout.fontSize + 'px)<input type="range" min="10" max="16" value="' + P.layout.fontSize + '" data-l="fontSize"></label></div>'
-      + '<p class="hint">Colors are print colors. On the dark theme, very dark colors are brightened on screen so they stay visible. Changes apply as you make them and save with the project. Undo works here too.</p>';
+      + '<p class="hint">Colors are print colors. With the SureTrak classic preset the screen uses the app\u2019s softer chart colors and printouts use the colors above; with any other preset the screen uses these colors too (very dark ones are brightened on the dark theme). Changes apply as you make them and save with the project. Undo works here too.</p>';
   };
   modal('Format bars', '', '<button class="btn pri" data-close>Done</button>'); draw();
   $('.modal').style.width = 'min(760px,100%)';
@@ -2053,8 +2175,14 @@ function sc(hex) {
   const out = '#' + c.map((v) => Math.round(v * 255).toString(16).padStart(2, '0')).join('');
   scCache.set(hex, out); return out;
 }
+const GANTT_TOKENS = { remaining: 'activity', critical: 'critical', progress: 'progress', target: 'baseline', float: 'float', summary: 'summary', milestone: 'milestone' };
 function screenBars(B) {
   const o = JSON.parse(JSON.stringify(B));
+  if (P && P.layout && P.layout.preset === 'classic') { // the default preset: chart colors come from the theme tokens (print keeps SureTrak colors)
+    const cs = getComputedStyle(document.documentElement);
+    for (const [k, t] of Object.entries(GANTT_TOKENS)) { const v = cs.getPropertyValue('--ot-gantt-' + t).trim(); if (o[k] && HEX.test(v)) o[k].color = v; }
+    return o;
+  }
   for (const k of ['remaining', 'critical', 'progress', 'target', 'float', 'summary', 'milestone']) if (o[k] && o[k].color) o[k].color = sc(o[k].color);
   return o;
 }
@@ -2512,6 +2640,8 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Delete' && ui.sel) { e.preventDefault(); delActivity(ui.sel); }
   if (e.key === 'F2' && ui.sel) { e.preventDefault(); startEdit($('#grid tr[data-id="' + CSS.escape(ui.sel) + '"] td[data-k="name"]')); }
 });
+
+$('.rail').addEventListener('click', (e) => { const b = e.target.closest('.rb'); if (!b || b.id === 'bTheme' || !$('#ov').classList.contains('open')) return; $$('.rail .rb.on').forEach((x) => x.classList.remove('on')); b.classList.add('on'); b.setAttribute('aria-current', 'true'); });
 
 // ---------- boot
 let boot = null;
