@@ -172,6 +172,7 @@ table.grid{border-collapse:separate;border-spacing:0;table-layout:fixed}
 .grid td.c-code{color:var(--muted);font-variant-numeric:tabular-nums}
 .grid tr.act:hover td{background:var(--hover)}
 .grid tr.fill td{cursor:default}
+#gantt .sp{fill:var(--panel)} #gantt text.sl{font-weight:600}
 .grid tr.sel td{background:var(--sel)!important}
 .grid tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--sel-line)}
 .grid tr.crit td.c-name{color:var(--crit-ink)}
@@ -664,9 +665,37 @@ const PRESETS = {
     summary: { show: true, color: '#1f2937', h: 6, style: 'bracket' }, milestone: { shape: 'diamond', size: 13, color: '#111827' },
     labelR: 'name', labelL: 'none' } },
 };
-const LABELS = { none: 'None', name: 'Activity name', code: 'Activity ID', codename: 'ID + name', start: 'Start date', finish: 'Finish date', dur: 'Duration', pct: '% complete', tf: 'Total float', res: 'Resource' };
+const LABELS = { none: 'None', name: 'Activity name', namepct: 'Name + % complete', namepctres: 'Name + % + resource', namefin: 'Name + finish date', code: 'Activity ID', codename: 'ID + name', start: 'Start date', finish: 'Finish date', dur: 'Duration', pct: '% complete', tf: 'Total float', res: 'Resource' };
+// bar label text, shared by the screen and the PDF
+function barLabel(kind, a, r) {
+  const pct = (r.status === 'done' ? 100 : a.pct || 0) + '%';
+  switch (kind) {
+    case 'name': return a.name; case 'code': return a.code; case 'codename': return a.code + '  ' + a.name;
+    case 'namepct': return r.milestone ? a.name : a.name + '  ' + pct; case 'namepctres': return [a.name, r.milestone ? '' : pct, a.res].filter(Boolean).join('  ');
+    case 'namefin': return a.name + '  ' + fmt(a.af || r.ef);
+    case 'start': return fmt(a.as || r.es); case 'finish': return fmt(a.af || r.ef);
+    case 'dur': return (r.status === 'planned' ? a.od : a.rd) + 'd'; case 'tf': return r.tf == null ? '' : 'TF ' + r.tf;
+    case 'res': return a.res; case 'pct': return pct;
+  }
+  return '';
+}
+// right-hand label, plus the milestone's date when "Show dates next to milestones" is on (unless the label is already a date)
+function rightLabel(kind, a, r) {
+  let t = barLabel(kind, a, r);
+  if (r.milestone && P.layout.msDate && !['start', 'finish', 'namefin'].includes(kind)) { const d = fmt(a.type === 'start' ? (a.as || r.es) : (a.af || r.ef)); if (d) t = t ? t + '  ' + d : d; }
+  return t;
+}
+// group % complete: weighted by original duration; milestone-only groups count finished milestones
+function groupPct(list) {
+  let w = 0, d = 0, n = 0, done = 0;
+  for (const a of list) { const r = S.acts[a.id]; if (!r) continue; const p = r.status === 'done' ? 100 : Math.max(0, Math.min(100, a.pct || 0)); n++; if (p >= 100) done++; if (a.type === 'task' && a.od > 0) { w += a.od; d += a.od * p; } }
+  return !n ? null : w ? Math.round(d / w) : Math.round((done / n) * 100);
+}
+// optional "color bars by group": distinct, non-red hues (red stays for critical)
+const GROUP_COLORS = ['#3b7dd8', '#2e9e5b', '#8a63d2', '#0e8f8f', '#c27c0e', '#5b6b82', '#b0568a', '#6d8f2e'];
+const groupColor = (wbs) => { if (!P.layout.groupColor) return null; const i = P.wbs.findIndex((w) => w.id === wbs); return i < 0 ? null : GROUP_COLORS[i % GROUP_COLORS.length]; };
 function defaultLayout() {
-  return { preset: 'classic', rowH: 28, fontSize: 12, links: true, bars: JSON.parse(JSON.stringify(PRESETS.classic.bars)),
+  return { preset: 'classic', rowH: 28, fontSize: 12, links: true, msDate: true, groupColor: false, bars: JSON.parse(JSON.stringify(PRESETS.classic.bars)),
     cols: Object.keys(COLREG).map((k) => ({ k, w: COLREG[k].w, show: DEFCOLS.includes(k) })).sort((a, b) => (DEFCOLS.indexOf(a.k) + 1 || 99) - (DEFCOLS.indexOf(b.k) + 1 || 99)) };
 }
 function sanitizeLayout(o) {
@@ -690,7 +719,7 @@ function sanitizeLayout(o) {
   const ob = (v) => (v == null ? null : !!v);
   const print = p ? { paper: str(p.paper, 12), orient: str(p.orient, 12), scope: str(p.scope, 6), density: str(p.density, 10), links: p.links == null ? true : !!p.links, footer: p.footer == null ? true : !!p.footer, company: str(p.company, 80), title: str(p.title, 120), rev: str(p.rev, 80), note: str(p.note, 300), hfont: fontKey(p.hfont, ''), hweight: weightKey(p.hweight, ''), hsize: p.hsize == null ? null : ptSize(p.hsize, 8, 28, 12), nfont: fontKey(p.nfont, ''), nweight: weightKey(p.nweight, ''), nsize: p.nsize == null ? null : ptSize(p.nsize, 6, 28, 8.5), from: dt(p.from), to: dt(p.to),
     cols: Array.isArray(p.cols) ? [...new Set(p.cols.filter((k) => COLREG[k]))].slice(0, 30) : null, bl: ob(p.bl), float: ob(p.float), prog: ob(p.prog), groups: ob(p.groups), nonwork: ob(p.nonwork), ddline: ob(p.ddline), label: LABELS[p.label] ? p.label : null } : {};
-  return { preset: PRESETS[o.preset] ? o.preset : 'custom', rowH: int(o.rowH, 20, 48, 28), fontSize: int(o.fontSize, 10, 16, 12), links: o.links == null ? true : !!o.links, bars: out, cols, print };
+  return { preset: PRESETS[o.preset] ? o.preset : 'custom', rowH: int(o.rowH, 20, 48, 28), fontSize: int(o.fontSize, 10, 16, 12), links: o.links == null ? true : !!o.links, msDate: o.msDate == null ? true : !!o.msDate, groupColor: !!o.groupColor, bars: out, cols, print };
 }
 
 // ---------- sample: elevator modernization
@@ -816,7 +845,7 @@ function buildRows() {
     if (!list.length && (g.w.id === '' || q || ui.filter !== 'all')) continue;
     const all = g.list.map((a) => S.acts[a.id]).filter(Boolean);
     const s = Math.min(...all.map((r) => r.esP)), f = Math.max(...all.map((r) => r.efP));
-    out.push({ g: g.w, n: g.list.length, s: Number.isFinite(s) ? s : null, f: Number.isFinite(f) ? f : null, crit: all.some((r) => r.critical) });
+    out.push({ g: g.w, n: g.list.length, pct: groupPct(g.list), s: Number.isFinite(s) ? s : null, f: Number.isFinite(f) ? f : null, crit: all.some((r) => r.critical) });
     if (!ui.collapsed.has(g.w.id)) for (const a of list) out.push({ a });
   }
   return out;
@@ -883,7 +912,7 @@ function renderTable() {
   for (const row of rows) {
     if (row.g) {
       const col = ui.collapsed.has(row.g.id);
-      h += '<tr class="g" tabindex="0" role="button" aria-expanded="' + !col + '" data-g="' + esc(row.g.id) + '"><td colspan="' + span + '"><span class="tw">' + (col ? '▸' : '▾') + '</span>' + esc((row.g.code ? row.g.code + '  ' : '') + row.g.name) + ' <span style="color:var(--muted);font-weight:400">(' + row.n + ')</span></td>';
+      h += '<tr class="g" tabindex="0" role="button" aria-expanded="' + !col + '" data-g="' + esc(row.g.id) + '"><td colspan="' + span + '"' + (groupColor(row.g.id) ? ' style="box-shadow:inset 4px 0 0 ' + groupColor(row.g.id) + '"' : '') + '><span class="tw">' + (col ? '▸' : '▾') + '</span>' + esc((row.g.code ? row.g.code + '  ' : '') + row.g.name) + ' <span style="color:var(--muted);font-weight:400">(' + row.n + ')' + (row.pct != null ? ' · ' + row.pct + '% complete' : '') + '</span></td>';
       for (let i = span; i < cs.length; i++) {
         const k = cs[i].k;
         h += '<td class="d">' + ((k === 'start' || k === 'es') && row.s != null ? fmt(CPM.toIso(row.s)) : (k === 'finish' || k === 'ef') && row.f != null ? fmt(CPM.toIso(row.f - 1)) : '') + '</td>';
@@ -892,9 +921,9 @@ function renderTable() {
     }
     const a = row.a, r = S.acts[a.id] || {};
     h += '<tr class="act' + (ui.sel === a.id ? ' sel' : '') + (r.critical ? ' crit' : '') + (r.status === 'done' ? ' done' : '') + '" data-id="' + esc(a.id) + '">'
-      + cs.map((c) => {
+      + cs.map((c, ci) => {
         const editable = c.ed && !(a.type !== 'task' && ['od', 'rd', 'pct', 'cost'].includes(c.k)) && !(c.k === 'rd' && r.status !== 'active');
-        return '<td class="c-' + c.k + (c.n ? ' n' : '') + (c.d ? ' d' : '') + (editable ? ' ed' : '') + '" data-k="' + c.k + '">' + cellHtml(c, a, r) + '</td>';
+        return '<td class="c-' + c.k + (c.n ? ' n' : '') + (c.d ? ' d' : '') + (editable ? ' ed' : '') + '" data-k="' + c.k + '"' + (ci === 0 && groupColor(a.wbs) ? ' style="box-shadow:inset 4px 0 0 ' + groupColor(a.wbs) + '"' : '') + '>' + cellHtml(c, a, r) + '</td>';
       }).join('') + '</tr>';
   }
   const blank = '<tr class="fill" aria-hidden="true">' + '<td></td>'.repeat(cs.length) + '</tr>';
@@ -958,31 +987,25 @@ function renderGantt() {
     else d = 'M' + x + ' ' + (cy - h) + 'L' + (x + h) + ' ' + cy + 'L' + x + ' ' + (cy + h) + 'L' + (x - h) + ' ' + cy + 'Z';
     return '<path class="' + cls + '" d="' + d + '" fill="' + fill + '" stroke="var(--ms-stroke)" stroke-width=".6"/>';
   };
-  const lbl = (kind, a, r) => {
-    switch (kind) {
-      case 'name': return a.name; case 'code': return a.code; case 'codename': return a.code + '  ' + a.name;
-      case 'start': return fmt(a.as || r.es); case 'finish': return fmt(a.af || r.ef);
-      case 'dur': return (r.status === 'planned' ? a.od : a.rd) + 'd'; case 'tf': return r.tf == null ? '' : 'TF ' + r.tf;
-      case 'res': return a.res; case 'pct': return (r.status === 'done' ? 100 : a.pct) + '%';
-    }
-    return '';
-  };
   rows.forEach((row, i) => {
     const y = HH + i * RH;
     if (row.g) {
       bg += '<rect x="0" y="' + y + '" width="' + W + '" height="' + RH + '" fill="var(--group)" opacity=".7"/>';
       if (B.summary.show && row.s != null && row.f != null) {
-        const x1 = X(row.s), x2 = Math.max(X(row.f), x1 + 2), sh = Math.min(B.summary.h, RH - 8), sy = y + (RH - sh) / 2 - 1;
+        const x1 = X(row.s), x2 = Math.max(X(row.f), x1 + 2), sh = Math.min(B.summary.h, RH - 8), sy = y + (RH - sh) / 2 - 1, sc0 = esc(groupColor(row.g.id) || B.summary.color);
         body += B.summary.style === 'bar'
-          ? '<rect x="' + x1 + '" y="' + sy + '" width="' + (x2 - x1) + '" height="' + sh + '" fill="' + esc(B.summary.color) + '"/>'
-          : '<path d="M' + x1 + ' ' + sy + 'H' + x2 + 'V' + (sy + sh + 4) + 'l-5 -4H' + (x1 + 5) + 'l-5 4Z" fill="' + esc(B.summary.color) + '"/>';
+          ? '<rect x="' + x1 + '" y="' + sy + '" width="' + (x2 - x1) + '" height="' + sh + '" fill="' + sc0 + '"/>'
+          : '<path d="M' + x1 + ' ' + sy + 'H' + x2 + 'V' + (sy + sh + 4) + 'l-5 -4H' + (x1 + 5) + 'l-5 4Z" fill="' + sc0 + '"/>';
+        // progress: a line through the bar, as far as the group's % complete
+        if (row.pct > 0 && sh >= 4) body += '<rect class="sp" x="' + (x1 + 2) + '" y="' + (sy + sh / 2 - 1) + '" width="' + Math.max(1, (x2 - x1 - 4) * row.pct / 100) + '" height="2"/>';
+        if (ui.zoom !== 'month') body += '<text class="sl" x="' + (x2 + 8) + '" y="' + (y + RH / 2 + 4) + '">' + esc(row.g.name) + (row.pct != null ? '  ' + row.pct + '%' : '') + '</text>';
       }
       return;
     }
     const a = row.a, r = S.acts[a.id]; if (!r) return;
     rowY.set(a.id, y);
     if (ui.sel === a.id) bg += '<rect x="0" y="' + y + '" width="' + W + '" height="' + RH + '" fill="var(--sel)"/>';
-    const col = esc(r.critical ? B.critical.color : B.remaining.color);
+    const col = esc(r.critical ? B.critical.color : groupColor(a.wbs) || B.remaining.color);
     let g = '<g class="ab' + (ui.sel === a.id ? ' sel' : '') + '" data-id="' + esc(a.id) + '">';
     // target (baseline) bar
     const b = P.baseline && B.target.show && P.baseline.acts[a.id];
@@ -1020,7 +1043,7 @@ function renderGantt() {
       g += '<circle class="lk" cx="' + (xe + 9) + '" cy="' + mid + '" r="4.5"/>';
     }
     const ly = y + RH / 2 + 4;
-    const tr = lbl(B.labelR, a, r), tl = lbl(B.labelL, a, r);
+    const tr = rightLabel(B.labelR, a, r), tl = barLabel(B.labelL, a, r);
     if (tr && ui.zoom !== 'month') g += '<text x="' + xEndLabel + '" y="' + ly + '">' + esc(tr) + '</text>';
     if (tl) g += '<text x="' + xStartLabel + '" y="' + ly + '" text-anchor="end">' + esc(tl) + '</text>';
     body += g + '</g>';
@@ -1756,6 +1779,8 @@ function showBars() {
       + '</table></div>'
       + '<div class="fg" style="margin-top:14px"><label class="f">Label right of bar<select class="sel" data-b="labelR">' + Object.entries(LABELS).map(([k, l]) => '<option value="' + k + '"' + (B.labelR === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
       + '<label class="f">Label left of bar<select class="sel" data-b="labelL">' + Object.entries(LABELS).map(([k, l]) => '<option value="' + k + '"' + (B.labelL === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>'
+      + '<div class="f" style="justify-content:flex-end;gap:8px"><label class="chk"><input type="checkbox" data-lb="msDate"' + (P.layout.msDate ? ' checked' : '') + '> Show dates next to milestones</label>'
+      + '<label class="chk"><input type="checkbox" data-lb="groupColor"' + (P.layout.groupColor ? ' checked' : '') + '> Color bars by group <span style="color:var(--muted)">(critical stays red)</span></label></div>'
       + '<label class="f">Row height (' + P.layout.rowH + 'px)<input type="range" min="20" max="48" value="' + P.layout.rowH + '" data-l="rowH"></label>'
       + '<label class="f">Text size (' + P.layout.fontSize + 'px)<input type="range" min="10" max="16" value="' + P.layout.fontSize + '" data-l="fontSize"></label></div>'
       + '<p class="hint">Colors are print colors. With the SureTrak classic preset the screen uses the app\u2019s softer chart colors and printouts use the colors above; with any other preset the screen uses these colors too (very dark ones are brightened on the dark theme). Changes apply as you make them and save with the project. Undo works here too.</p>';
@@ -1768,6 +1793,7 @@ function showBars() {
     const live = e.type === 'input' && t.type === 'range';
     if (!(e.type === 'change' || live)) return;
     if (t.dataset.l) { const k = t.dataset.l; const v = int(t.value, 0, 100, P.layout[k]); if (live) { P.layout[k] = v; render(); t.previousSibling.textContent = (k === 'rowH' ? 'Row height (' : 'Text size (') + v + 'px)'; return; } commitLive(() => { P.layout[k] = v; }); return; }
+    if (e.type === 'change' && t.dataset.lb) { const k = t.dataset.lb; commit(() => { P.layout[k] = t.checked; }); draw(); return; }
     if (!t.dataset.b) return;
     const [k, f] = t.dataset.b.split('.');
     const setv = () => {
@@ -1779,7 +1805,7 @@ function showBars() {
       else if (f === 'pos' && ['top', 'mid', 'bot'].includes(t.value)) B[k].pos = t.value;
       else if (f === 'style') B[k].style = t.value === 'bar' ? 'bar' : 'bracket';
       else if (f === 'shape' && ['diamond', 'triangle', 'circle', 'square'].includes(t.value)) B[k].shape = t.value;
-      P.layout.preset = 'custom';
+      if (f) P.layout.preset = 'custom';
     };
     if (live) { setv(); renderGantt(); return; }
     commitLive(setv); draw();
@@ -1904,7 +1930,8 @@ function buildPdf(o, mk) {
   const { jsPDF } = window.jspdf;
   const rws = rowsFor(o.scope, o.groups);
   const G0 = pdfGeom({ ...o, __head: 0, __foot: 0 }, 0);
-  const doc = mk ? mk(G0.W, G0.H) : addPdfFonts(new jsPDF({ orientation: o.orient, unit: 'pt', format: [Math.min(G0.W, G0.H), Math.max(G0.W, G0.H)], compress: true }));
+  const pdf0 = () => { const d = new jsPDF({ orientation: o.orient, unit: 'pt', format: [Math.min(G0.W, G0.H), Math.max(G0.W, G0.H)], compress: true }); return o.hfont === 'carlito' || o.nfont === 'carlito' ? addPdfFonts(d) : d; }; // embed Carlito only when used
+  const doc = mk ? mk(G0.W, G0.H) : pdf0();
   // header and footer heights follow the chosen font sizes, so big text never runs into the chart
   const hs = ptSize(o.hsize, 8, 28, 12), nsz = ptSize(o.nsize, 6, 28, 8.5), hf = fontKey(o.hfont, 'helvetica'), nf = fontKey(o.nfont, 'helvetica');
   const tbw = Math.round(Math.max(170, Math.min(250, (G0.W - 2 * G0.M) * 0.32))), noteW = G0.W - G0.M - tbw - (G0.M + 200) - 16;
@@ -2003,12 +2030,15 @@ function buildPdf(o, mk) {
         doc.setFillColor(228, 232, 238); doc.rect(M + 0.3, y + 0.3, W - 2 * M - 0.6, rh - 0.6, 'F');
         doc.setFont('helvetica', 'bold'); doc.setFontSize(fsz); ink('#000000');
         const sIdx = cs.findIndex((c) => ['start', 'finish', 'es', 'ef'].includes(c.k)); const nameW = sIdx > 0 ? colX[sIdx][0] - M : tableW;
-        doc.text(fit((row.g.code ? row.g.code + '  ' : '') + row.g.name, nameW - 4), M + 2, y + rh / 2 + fsz * 0.35);
+        doc.text(fit((row.g.code ? row.g.code + '  ' : '') + row.g.name + (row.pct != null ? '  (' + row.pct + '%)' : ''), nameW - 4), M + 2, y + rh / 2 + fsz * 0.35);
         cs.forEach((c, j) => { if (j < sIdx) return; const v = (c.k === 'start' || c.k === 'es') && row.s != null ? fmt(CPM.toIso(row.s)) : (c.k === 'finish' || c.k === 'ef') && row.f != null ? fmt(CPM.toIso(row.f - 1)) : ''; if (v) doc.text(fit(v, colX[j][1] - 3), colX[j][0] + 2, y + rh / 2 + fsz * 0.35); });
         if (B.summary.show && row.s != null && row.f != null && row.f > lo && row.s < hi) {
-          const x1 = X(row.s), x2 = Math.max(X(row.f), x1 + 1); const sh = Math.min(scaleH(B.summary.h), rh - 5), sy = y + (rh - sh) / 2 - 1; fill(B.summary.color);
+          const x1 = X(Math.max(row.s, lo)), x2 = Math.max(X(Math.min(row.f, hi)), x1 + 1); const sh = Math.min(scaleH(B.summary.h), rh - 5), sy = y + (rh - sh) / 2 - 1; fill(groupColor(row.g.id) || B.summary.color);
           doc.rect(x1, sy, x2 - x1, sh, 'F');
           if (B.summary.style === 'bracket') { doc.triangle(x1, sy + sh, x1 + 3, sy + sh, x1, sy + sh + 2.5, 'F'); doc.triangle(x2, sy + sh, x2 - 3, sy + sh, x2, sy + sh + 2.5, 'F'); }
+          const fx1 = X(row.s), fx2 = Math.max(X(row.f), fx1 + 1);
+          if (row.pct > 0 && sh >= 2.5) { const pe = Math.min(x2 - 1, fx1 + 1 + (fx2 - fx1 - 2) * row.pct / 100); if (pe > x1 + 1) { fill('#ffffff'); doc.rect(x1 + 1, sy + sh / 2 - 0.5, pe - x1 - 1, 1, 'F'); } }
+          if (row.f <= hi && x2 + 4 < W - M - 20) { doc.setFontSize(fsz - 0.6); ink('#000000'); doc.text(fit(row.g.name + (row.pct != null ? '  ' + row.pct + '%' : ''), W - M - x2 - 6), x2 + 4, y + rh / 2 + fsz * 0.33); }
         }
         return;
       }
@@ -2044,15 +2074,14 @@ function buildPdf(o, mk) {
           xLabel = mx + hh + 3;
         }
       } else {
-        const py = band(B.progress, y), ph = Math.min(scaleH(B.progress.h), rh - 2), crit = r.critical ? B.critical.color : B.remaining.color;
+        const py = band(B.progress, y), ph = Math.min(scaleH(B.progress.h), rh - 2), crit = r.critical ? B.critical.color : groupColor(a.wbs) || B.remaining.color;
         if (r.status === 'done') bar(r.esP, r.efP, py, ph, B.progress.color);
         else if (r.status === 'active') { const dd = CPM.toDn(P.dataDate); if (B.remaining.show) bar(r.rsP, r.efP, top, bh, crit); if (B.progress.show) bar(r.esP, dd, py, ph, B.progress.color); }
         else if (B.remaining.show) bar(r.esP, r.efP, top, bh, crit);
         xLabel = r.efP > lo && r.efP <= hi ? X(r.efP) + 3 : null;
         if (B.float.show && r.tf > 0 && r.lfP > r.efP && r.lfP > lo && r.efP < hi) { stroke(B.float.color); doc.setLineWidth(Math.max(0.5, scaleH(B.float.h) * .7)); const fy = band(B.float, y) + Math.min(scaleH(B.float.h), rh - 2) / 2; doc.line(X(r.efP), fy, X(r.lfP), fy); doc.setLineWidth(0.6); doc.line(X(r.lfP), fy - 2, X(r.lfP), fy + 2); doc.setLineWidth(0.3); if (xLabel != null && r.lfP <= hi) xLabel = X(r.lfP) + 3; }
       }
-      const lbl = (kind) => { switch (kind) { case 'name': return a.name; case 'code': return a.code; case 'codename': return a.code + '  ' + a.name; case 'start': return fmt(a.as || r.es); case 'finish': return fmt(a.af || r.ef); case 'dur': return (r.status === 'planned' ? a.od : a.rd) + 'd'; case 'tf': return r.tf == null ? '' : 'TF ' + r.tf; case 'res': return a.res; case 'pct': return (r.status === 'done' ? 100 : a.pct) + '%'; } return ''; };
-      const t = lbl(B.labelR);
+      const t = rightLabel(B.labelR, a, r);
       if (t && xLabel != null && xLabel < W - M - 12) { doc.setFontSize(fsz - 0.6); ink('#000000'); doc.text(fit(t, W - M - xLabel - 2), xLabel, y + rh / 2 + fsz * 0.33); }
     });
     // data date
@@ -2062,7 +2091,7 @@ function buildPdf(o, mk) {
     if (o.footer) {
       const fy = y1 + 6, fh = G.FOOT - 10; doc.setLineWidth(0.6); stroke('#000000'); doc.rect(M, fy, W - 2 * M, fh);
       doc.setFontSize(6.8); doc.setFont('helvetica', 'normal'); ink('#000000');
-      const leg = [['Non-critical', B.remaining.color, 'bar'], ['Critical', B.critical.color, 'bar'], ...(B.progress.show ? [['Progress', B.progress.color, 'bar']] : []), ...(B.target.show && P.baseline ? [['Baseline', B.target.color, 'thin']] : []), ['Milestone', B.milestone.color, 'ms']];
+      const leg = [[P.layout.groupColor && P.wbs.length ? 'Non-critical (by group)' : 'Non-critical', P.layout.groupColor && P.wbs.length ? GROUP_COLORS[0] : B.remaining.color, 'bar'], ['Critical', B.critical.color, 'bar'], ...(B.progress.show ? [['Progress', B.progress.color, 'bar']] : []), ...(B.target.show && P.baseline ? [['Baseline', B.target.color, 'thin']] : []), ['Milestone', B.milestone.color, 'ms']];
       let lx = M + 8;
       leg.forEach(([name, c, kind], i) => {
         const ly = fy + 10 + (i % 3) * 12; if (i === 3) lx = M + 110;
