@@ -1819,8 +1819,10 @@ $('#grid').addEventListener('pointerdown', (e) => {
 });
 
 // ---------- Print / PDF (vector output with jsPDF)
-const PDF_FONTS = { helvetica: 'Helvetica', times: 'Times', courier: 'Courier' }; // the three families every PDF reader has built in
-const PDF_FONT_CSS = { helvetica: 'Helvetica, Arial, sans-serif', times: '"Times New Roman", Times, serif', courier: '"Courier New", Courier, monospace' };
+// Helvetica, Times and Courier are built into every PDF reader; Carlito (bundled, embedded only when used) matches Calibri
+const PDF_FONTS = { helvetica: 'Helvetica', times: 'Times', courier: 'Courier', carlito: 'Calibri (Carlito)' };
+const addPdfFonts = (doc) => { const F = window.__PDFFONTS || {}; for (const [fam, w] of Object.entries(F)) for (const [st, b64] of Object.entries(w)) { const fn = fam + '-' + st + '.ttf'; doc.addFileToVFS(fn, b64); doc.addFont(fn, fam, st); } return doc; };
+const PDF_FONT_CSS = { helvetica: 'Helvetica, Arial, sans-serif', carlito: 'Carlito, Calibri, sans-serif', times: '"Times New Roman", Times, serif', courier: '"Courier New", Courier, monospace' };
 const fontKey = (v, d) => (PDF_FONTS[v] ? v : d), weightKey = (v, d) => (v === 'bold' || v === 'normal' ? v : d);
 const ptSize = (v, lo, hi, d) => { const n = Math.round(Number(v) * 2) / 2; return Number.isFinite(n) && n > 0 ? Math.min(hi, Math.max(lo, n)) : d; };
 const PAPER = { letter: ['Letter 8½×11', 612, 792], legal: ['Legal 8½×14', 612, 1008], tabloid: ['Tabloid 11×17', 792, 1224], a4: ['A4', 595.28, 841.89], a3: ['A3', 841.89, 1190.55] };
@@ -1860,7 +1862,7 @@ function hexRgb(h) { const n = parseInt(String(h).slice(1), 16); return [(n >> 1
 
 function previewDoc(W, H) {
   const { jsPDF } = window.jspdf;
-  const m = new jsPDF({ unit: 'pt', format: [Math.min(W, H), Math.max(W, H)], orientation: W > H ? 'landscape' : 'portrait' }); // text measuring only
+  const m = addPdfFonts(new jsPDF({ unit: 'pt', format: [Math.min(W, H), Math.max(W, H)], orientation: W > H ? 'landscape' : 'portrait' })); // text measuring only
   const pages = [[]]; let cur = pages[0];
   const d = { pages, W, H, setProperties() {}, addPage() { cur = []; pages.push(cur); },
     setFont(f, st) { m.setFont(f, st); cur.push(['setFont', [f, st]]); }, setFontSize(z) { m.setFontSize(z); cur.push(['setFontSize', [z]]); },
@@ -1896,7 +1898,7 @@ function buildPdf(o, mk) {
   const { jsPDF } = window.jspdf;
   const rws = rowsFor(o.scope, o.groups);
   const G0 = pdfGeom({ ...o, __head: 0, __foot: 0 }, 0);
-  const doc = mk ? mk(G0.W, G0.H) : new jsPDF({ orientation: o.orient, unit: 'pt', format: [Math.min(G0.W, G0.H), Math.max(G0.W, G0.H)], compress: true });
+  const doc = mk ? mk(G0.W, G0.H) : addPdfFonts(new jsPDF({ orientation: o.orient, unit: 'pt', format: [Math.min(G0.W, G0.H), Math.max(G0.W, G0.H)], compress: true }));
   // header and footer heights follow the chosen font sizes, so big text never runs into the chart
   const hs = ptSize(o.hsize, 8, 28, 12), nsz = ptSize(o.nsize, 6, 16, 8.5), hf = fontKey(o.hfont, 'helvetica'), nf = fontKey(o.nfont, 'helvetica');
   const tbw = Math.round(Math.max(170, Math.min(250, (G0.W - 2 * G0.M) * 0.32))), noteW = G0.W - G0.M - tbw - (G0.M + 200) - 16;
@@ -2119,6 +2121,8 @@ function showPrint() {
     const box = $('#pvPages'); if (!box) return;
     const err = bad(); $$('#pvSave,#pvPrint').forEach((b) => { b.disabled = !!err; });
     if (err) { $('#pvInfo').innerHTML = '<span class="neg">' + esc(err) + '</span>'; return; }
+    // a canvas draws with a fallback until a web font is loaded: load Carlito first, then draw
+    if ((o.hfont === 'carlito' || o.nfont === 'carlito') && document.fonts && !document.fonts.check('bold 10px Carlito')) { Promise.all([document.fonts.load('10px Carlito'), document.fonts.load('bold 10px Carlito')]).then(paint, () => {}); }
     let built; try { built = buildPdf(o, previewDoc); } catch (e) { $('#pvInfo').innerHTML = '<span class="neg">Could not draw the preview: ' + esc(e.message) + '</span>'; return; }
     const d = built.doc, n = d.pages.length, show = Math.min(n, 40);
     const cw = box.clientWidth - 48, ch = box.clientHeight - 64;
