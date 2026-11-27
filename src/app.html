@@ -275,6 +275,9 @@ textarea.inp{height:auto;min-height:70px;padding:8px 9px;resize:vertical}
 .pv-sec .f{margin-bottom:8px}
 .pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;font-size:12px;color:var(--muted)}
 .pv-chk{display:flex;padding:3px 0;color:var(--text);font-size:12.5px}
+.pv-font{display:grid;grid-template-columns:1fr 1fr 74px;gap:6px;margin:-2px 0 10px}
+.pv-font .sel{height:30px;padding:0 6px;font-size:12.5px}
+.pv-size{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)} .pv-size .inp{height:30px;padding:0 6px;text-align:right}
 .pv-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 8px;margin:8px 0 6px}
 .pv-main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
 .pv-bar{display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
@@ -684,7 +687,7 @@ function sanitizeLayout(o) {
   if (!cols.some((c) => c.show)) cols.find((c) => c.k === 'name').show = true;
   const p = o.print && typeof o.print === 'object' ? o.print : null;
   const ob = (v) => (v == null ? null : !!v);
-  const print = p ? { paper: str(p.paper, 12), orient: str(p.orient, 12), scope: str(p.scope, 6), density: str(p.density, 10), links: p.links == null ? true : !!p.links, footer: p.footer == null ? true : !!p.footer, company: str(p.company, 80), title: str(p.title, 120), rev: str(p.rev, 80), note: str(p.note, 300), from: dt(p.from), to: dt(p.to),
+  const print = p ? { paper: str(p.paper, 12), orient: str(p.orient, 12), scope: str(p.scope, 6), density: str(p.density, 10), links: p.links == null ? true : !!p.links, footer: p.footer == null ? true : !!p.footer, company: str(p.company, 80), title: str(p.title, 120), rev: str(p.rev, 80), note: str(p.note, 300), hfont: fontKey(p.hfont, ''), hweight: weightKey(p.hweight, ''), hsize: p.hsize == null ? null : ptSize(p.hsize, 8, 28, 12), nfont: fontKey(p.nfont, ''), nweight: weightKey(p.nweight, ''), nsize: p.nsize == null ? null : ptSize(p.nsize, 6, 16, 8.5), from: dt(p.from), to: dt(p.to),
     cols: Array.isArray(p.cols) ? [...new Set(p.cols.filter((k) => COLREG[k]))].slice(0, 30) : null, bl: ob(p.bl), float: ob(p.float), prog: ob(p.prog), groups: ob(p.groups), nonwork: ob(p.nonwork), ddline: ob(p.ddline), label: LABELS[p.label] ? p.label : null } : {};
   return { preset: PRESETS[o.preset] ? o.preset : 'custom', rowH: int(o.rowH, 20, 48, 28), fontSize: int(o.fontSize, 10, 16, 12), links: o.links == null ? true : !!o.links, bars: out, cols, print };
 }
@@ -1816,6 +1819,10 @@ $('#grid').addEventListener('pointerdown', (e) => {
 });
 
 // ---------- Print / PDF (vector output with jsPDF)
+const PDF_FONTS = { helvetica: 'Helvetica', times: 'Times', courier: 'Courier' }; // the three families every PDF reader has built in
+const PDF_FONT_CSS = { helvetica: 'Helvetica, Arial, sans-serif', times: '"Times New Roman", Times, serif', courier: '"Courier New", Courier, monospace' };
+const fontKey = (v, d) => (PDF_FONTS[v] ? v : d), weightKey = (v, d) => (v === 'bold' || v === 'normal' ? v : d);
+const ptSize = (v, lo, hi, d) => { const n = Math.round(Number(v) * 2) / 2; return Number.isFinite(n) && n > 0 ? Math.min(hi, Math.max(lo, n)) : d; };
 const PAPER = { letter: ['Letter 8½×11', 612, 792], legal: ['Legal 8½×14', 612, 1008], tabloid: ['Tabloid 11×17', 792, 1224], a4: ['A4', 595.28, 841.89], a3: ['A3', 841.89, 1190.55] };
 const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
 function printOpts() {
@@ -1823,7 +1830,8 @@ function printOpts() {
   const B = P.layout.bars, def = (v, d) => (v == null ? d : !!v);
   return { paper: PAPER[o.paper] ? o.paper : 'tabloid', orient: o.orient === 'portrait' ? 'portrait' : 'landscape', scope: ['all', 'view', 'crit', 'open'].includes(o.scope) ? o.scope : 'view',
     density: ['compact', 'normal', 'roomy'].includes(o.density) ? o.density : 'normal', links: o.links == null ? P.layout.links : !!o.links, footer: o.footer == null ? true : !!o.footer,
-    company: str(o.company, 80), title: str(o.title, 120), rev: str(o.rev, 80), note: str(o.note, 300), from: dt(o.from), to: dt(o.to),
+    company: str(o.company, 80), title: str(o.title, 120), rev: str(o.rev, 80), note: str(o.note, 300),
+    hfont: fontKey(o.hfont, 'helvetica'), hweight: weightKey(o.hweight, 'bold'), hsize: ptSize(o.hsize, 8, 28, 12), nfont: fontKey(o.nfont, 'helvetica'), nweight: weightKey(o.nweight, 'bold'), nsize: ptSize(o.nsize, 6, 16, 8.5), from: dt(o.from), to: dt(o.to),
     cols: Array.isArray(o.cols) && o.cols.length ? o.cols.filter((k) => COLREG[k]) : null,
     bl: def(o.bl, B.target.show), float: def(o.float, B.float.show), prog: def(o.prog, B.progress.show), groups: def(o.groups, true), nonwork: def(o.nonwork, true), ddline: def(o.ddline, true),
     label: LABELS[o.label] ? o.label : B.labelR };
@@ -1844,7 +1852,7 @@ function printCols(o) {
 }
 function pdfGeom(o, nRows) {
   const [, pw, ph] = PAPER[o.paper]; const W = o.orient === 'landscape' ? Math.max(pw, ph) : Math.min(pw, ph), H = o.orient === 'landscape' ? Math.min(pw, ph) : Math.max(pw, ph);
-  const M = 24, HEAD = 38, FOOT = o.footer ? 52 : 14, TH = 26, rh = { compact: 11, normal: 14, roomy: 18 }[o.density];
+  const M = 24, HEAD = o.__head || 38, FOOT = o.footer ? (o.__foot || 52) : 14, TH = 26, rh = { compact: 11, normal: 14, roomy: 18 }[o.density];
   const y0 = M + HEAD, y1 = H - M - FOOT; const rpp = Math.max(1, Math.floor((y1 - y0 - TH) / rh));
   return { W, H, M, HEAD, FOOT, TH, rh, y0, y1, rpp, pages: Math.max(1, Math.ceil(nRows / rpp)) };
 }
@@ -1863,12 +1871,12 @@ function previewDoc(W, H) {
 function paintPage(ctx, ops) {
   const st = { bold: false, size: 10, fill: '#000', draw: '#000', text: '#000' };
   const rgb = (a) => (typeof a[0] === 'string' ? a[0] : 'rgb(' + a[0] + ',' + a[1] + ',' + a[2] + ')');
-  const font = () => { ctx.font = (st.bold ? 'bold ' : '') + st.size + 'px Helvetica, Arial, sans-serif'; };
+  const font = () => { ctx.font = (st.bold ? 'bold ' : '') + st.size + 'px ' + (PDF_FONT_CSS[st.family] || PDF_FONT_CSS.helvetica); };
   const paint = (style) => { if (!style || /D|S/.test(style)) { ctx.strokeStyle = st.draw; ctx.stroke(); } if (style && /F/.test(style)) { ctx.fillStyle = st.fill; ctx.fill(); } };
   ctx.lineWidth = 0.2; ctx.lineCap = 'butt'; ctx.textBaseline = 'alphabetic'; font();
   for (const [n, a] of ops) {
     switch (n) {
-      case 'setFont': st.bold = /bold/.test(a[1] || ''); font(); break;
+      case 'setFont': st.family = a[0]; st.bold = /bold/.test(a[1] || ''); font(); break;
       case 'setFontSize': st.size = a[0]; font(); break;
       case 'setFillColor': st.fill = rgb(a); break; case 'setDrawColor': st.draw = rgb(a); break; case 'setTextColor': st.text = rgb(a); break;
       case 'setLineWidth': ctx.lineWidth = a[0]; break; case 'setLineDashPattern': ctx.setLineDash(a[0] || []); break;
@@ -1887,9 +1895,15 @@ function paintPage(ctx, ops) {
 function buildPdf(o, mk) {
   const { jsPDF } = window.jspdf;
   const rws = rowsFor(o.scope, o.groups);
+  const G0 = pdfGeom({ ...o, __head: 0, __foot: 0 }, 0);
+  const doc = mk ? mk(G0.W, G0.H) : new jsPDF({ orientation: o.orient, unit: 'pt', format: [Math.min(G0.W, G0.H), Math.max(G0.W, G0.H)], compress: true });
+  // header and footer heights follow the chosen font sizes, so big text never runs into the chart
+  const hs = ptSize(o.hsize, 8, 28, 12), nsz = ptSize(o.nsize, 6, 16, 8.5), hf = fontKey(o.hfont, 'helvetica'), nf = fontKey(o.nfont, 'helvetica');
+  const tbw = Math.round(Math.max(170, Math.min(250, (G0.W - 2 * G0.M) * 0.32))), noteW = G0.W - G0.M - tbw - (G0.M + 200) - 16;
+  o.__head = Math.max(38, Math.ceil(hs + 26)); o.__foot = 0;
+  if (o.footer && o.note && o.note.trim()) { doc.setFont(nf, weightKey(o.nweight, 'bold')); doc.setFontSize(nsz); const nl = doc.splitTextToSize(o.note.trim(), noteW).length; o.__foot = Math.min(120, Math.max(52, Math.ceil(nl * nsz * 1.22 + 20))); }
   const G = pdfGeom(o, rws.length);
   const { W, H, M, TH, rh, y0, y1, rpp } = G;
-  const doc = mk ? mk(W, H) : new jsPDF({ orientation: o.orient, unit: 'pt', format: [Math.min(W, H), Math.max(W, H)], compress: true });
   doc.setProperties({ title: (o.title || P.name) + ' — schedule', creator: 'OpenTrak' });
   const B = JSON.parse(JSON.stringify(P.layout.bars)); B.target.show = !!o.bl; B.float.show = !!o.float; B.progress.show = !!o.prog; B.labelR = o.label;
   const fsz = { compact: 6.3, normal: 7.2, roomy: 8.2 }[o.density]; let noteCut = false;
@@ -1919,11 +1933,11 @@ function buildPdf(o, mk) {
     if (pg) doc.addPage();
     const pr = rws.slice(pg * rpp, (pg + 1) * rpp);
     // page header
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); ink('#000000'); doc.text(fit(o.title || P.name, W * 0.6), M, M + 12);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); ink('#333333');
-    doc.text('Data date ' + fmt(P.dataDate) + '    Start ' + fmt(S.start) + '    Finish ' + fmt(S.finish) + (o.company ? '    ' + o.company : ''), M, M + 25);
-    doc.text('Printed ' + printed + '    Page ' + (pg + 1) + ' of ' + G.pages, W - M, M + 12, { align: 'right' });
-    if (o.rev) { doc.setFont('helvetica', 'bold'); doc.text(fit(o.rev, W * 0.35), W - M, M + 25, { align: 'right' }); doc.setFont('helvetica', 'normal'); }
+    doc.setFont(hf, weightKey(o.hweight, 'bold')); doc.setFontSize(hs); ink('#000000'); doc.text(fit(o.title || P.name, W * 0.6), M, M + hs);
+    doc.setFont(hf, 'normal'); doc.setFontSize(8); ink('#333333');
+    doc.text('Data date ' + fmt(P.dataDate) + '    Start ' + fmt(S.start) + '    Finish ' + fmt(S.finish) + (o.company ? '    ' + o.company : ''), M, M + hs + 13);
+    doc.text('Printed ' + printed + '    Page ' + (pg + 1) + ' of ' + G.pages, W - M, M + Math.min(hs, 12), { align: 'right' });
+    if (o.rev) { doc.setFont(hf, 'bold'); doc.text(fit(o.rev, W * 0.35), W - M, M + hs + 13, { align: 'right' }); doc.setFont(hf, 'normal'); }
     // frame
     doc.setLineWidth(0.6); stroke('#000000'); doc.rect(M, y0, W - 2 * M, y1 - y0);
     // timescale
@@ -2048,13 +2062,13 @@ function buildPdf(o, mk) {
         doc.text(name, lx + 24, ly + 2.3);
       });
       if (o.ddline) { const dx = M + 110, dy = fy + 10 + (leg.length - 3) * 12; /* next free legend slot, second column */ doc.setDrawColor(14, 116, 200); doc.setLineDashPattern([3, 2], 0); doc.line(dx, dy - 3, dx + 18, dy - 3); doc.setLineDashPattern([], 0); doc.text('Data date', dx + 24, dy); } stroke('#000000');
-      const tbw = Math.round(Math.max(170, Math.min(250, (W - 2 * M) * 0.32))); // title block: 250pt on wide paper, narrower on Letter/A4 portrait
+      // title block: 250pt on wide paper, narrower on Letter/A4 portrait (tbw, computed above)
       const tbx = W - M - tbw; doc.line(tbx, fy, tbx, fy + fh);
       if (o.note && o.note.trim()) { // footer note: bold, centered in the box between the legend and the title block
         const nx0 = M + 200, nw = tbx - nx0; doc.line(nx0, fy, nx0, fy + fh);
-        doc.setFont('helvetica', 'bold'); ink('#000000');
-        // largest size from 8.5pt down to 6.5pt at which the whole note fits; shorten only as a last resort
-        let fz = 8.5, lines, lh, max;
+        doc.setFont(nf, weightKey(o.nweight, 'bold')); ink('#000000');
+        // the chosen size; only if the box is still too small, step down to 6.5pt, then shorten as a last resort
+        let fz = nsz, lines, lh, max;
         for (; ; fz -= 0.5) { doc.setFontSize(fz); lh = fz * 1.22; lines = doc.splitTextToSize(o.note.trim(), nw - 16); max = Math.max(1, Math.floor((fh - 4) / lh)); if (lines.length <= max || fz <= 6.5) break; }
         if (lines.length > max) { lines = lines.slice(0, max); lines[max - 1] = fit(lines[max - 1] + '…', nw - 16); noteCut = true; }
         doc.text(lines, nx0 + nw / 2, fy + fh / 2 - ((lines.length - 1) * lh) / 2 + fz * 0.35, { align: 'center', lineHeightFactor: 1.22 });
@@ -2074,6 +2088,9 @@ function showPrint() {
   const sel = (k, opts, aria) => '<select class="sel" data-p="' + k + '"' + (aria ? ' aria-label="' + aria + '"' : '') + '>' + opts.map(([v, l]) => '<option value="' + v + '"' + (String(o[k]) === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>';
   const seg = (k, opts, label) => '<div class="seg" role="group" aria-label="' + label + '">' + opts.map(([v, l]) => '<button type="button" data-pseg="' + k + '" data-v="' + v + '" class="' + (o[k] === v ? 'on' : '') + '" aria-pressed="' + (o[k] === v) + '">' + l + '</button>').join('') + '</div>';
   const chk = (k, l, dis, hint) => '<label class="chk pv-chk"><input type="checkbox" data-p="' + k + '"' + (o[k] && !dis ? ' checked' : '') + (dis ? ' disabled' : '') + '> ' + l + (hint ? ' <span class="hint" style="margin:0">' + hint + '</span>' : '') + '</label>';
+  const fontRow = (pfx, label) => '<div class="pv-font" role="group" aria-label="' + label + ' font"><select class="sel" data-p="' + pfx + 'font" aria-label="' + label + ' font family">' + Object.entries(PDF_FONTS).map(([k, l]) => '<option value="' + k + '"' + (o[pfx + 'font'] === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>'
+    + '<select class="sel" data-p="' + pfx + 'weight" aria-label="' + label + ' font weight"><option value="normal"' + (o[pfx + 'weight'] === 'normal' ? ' selected' : '') + '>Regular</option><option value="bold"' + (o[pfx + 'weight'] === 'bold' ? ' selected' : '') + '>Bold</option></select>'
+    + '<label class="pv-size"><input class="inp" type="number" data-p="' + pfx + 'size" min="' + (pfx === 'h' ? 8 : 6) + '" max="' + (pfx === 'h' ? 28 : 16) + '" step="0.5" value="' + o[pfx + 'size'] + '" aria-label="' + label + ' font size in points"><span>pt</span></label></div>';
   const colKeys = () => printCols(o).map((c) => c.k);
   const side = () => {
     const on = new Set(colKeys());
@@ -2090,13 +2107,13 @@ function showPrint() {
       + (o.cols ? '<button class="btn sm ghost" id="pvColsReset">Use the screen’s columns</button>' : '<p class="hint" style="margin:4px 0 0">Using the same columns as the screen. Tick or untick to choose different ones for printing.</p>') + '</details>'
       + '<details class="pv-sec"' + (o.from || o.to ? ' open' : '') + '><summary><h4>Timescale</h4></summary><div class="fg"><label class="f">From<input class="inp" type="date" data-p="from" value="' + o.from + '"></label><label class="f">To<input class="inp" type="date" data-p="to" value="' + o.to + '"></label></div>'
       + '<p class="hint" style="margin:4px 0 0">Leave blank to fit the whole schedule across the page.</p></details>'
-      + '<div class="pv-sec"><h4>Title block</h4><label class="f">Title<input class="inp" data-p="title" data-live maxlength="120" placeholder="' + esc(P.name) + '" value="' + esc(o.title) + '"></label>'
+      + '<div class="pv-sec"><h4>Title block</h4><label class="f">Title<input class="inp" data-p="title" data-live maxlength="120" placeholder="' + esc(P.name) + '" value="' + esc(o.title) + '"></label>' + fontRow('h', 'Header')
       + '<label class="f">Company / prepared by<input class="inp" data-p="company" data-live maxlength="80" placeholder="e.g. Centennial Elevator — Steven Lindgren, PM" value="' + esc(o.company) + '"></label>'
       + '<label class="f">Revision / note<input class="inp" data-p="rev" data-live maxlength="80" placeholder="e.g. Rev 2 — overtime option" value="' + esc(o.rev) + '"></label>'
-      + '<label class="f">Footer note<textarea class="inp" data-p="note" data-live rows="3" maxlength="300" placeholder="e.g. Based on straight-time hours, Mon–Fri. Overtime option not included." style="min-height:64px">' + esc(o.note) + '</textarea></label>'
-      + '<p class="hint" style="margin:2px 0 0">Prints in bold in the middle of the footer on every page' + (o.footer ? '.' : ' — turn on <b>Legend &amp; title block</b> to show it.') + '</p></div>';
+      + '<label class="f">Footer note<textarea class="inp" data-p="note" data-live rows="3" maxlength="300" placeholder="e.g. Based on straight-time hours, Mon–Fri. Overtime option not included." style="min-height:64px">' + esc(o.note) + '</textarea></label>' + fontRow('n', 'Footer note')
+      + '<p class="hint" style="margin:2px 0 0">Prints in the middle of the footer on every page' + (o.footer ? '.' : ' — turn on <b>Legend &amp; title block</b> to show it.') + '</p></div>';
   };
-  const save = () => { P.layout.print = { paper: o.paper, orient: o.orient, scope: o.scope, density: o.density, links: o.links, footer: o.footer, company: o.company, title: o.title, rev: o.rev, note: o.note, from: o.from, to: o.to, cols: o.cols, bl: o.bl, float: o.float, prog: o.prog, groups: o.groups, nonwork: o.nonwork, ddline: o.ddline, label: o.label }; persist(); };
+  const save = () => { P.layout.print = { paper: o.paper, orient: o.orient, scope: o.scope, density: o.density, links: o.links, footer: o.footer, company: o.company, title: o.title, rev: o.rev, note: o.note, hfont: o.hfont, hweight: o.hweight, hsize: o.hsize, nfont: o.nfont, nweight: o.nweight, nsize: o.nsize, from: o.from, to: o.to, cols: o.cols, bl: o.bl, float: o.float, prog: o.prog, groups: o.groups, nonwork: o.nonwork, ddline: o.ddline, label: o.label }; persist(); };
   const bad = () => (o.from && o.to && o.to <= o.from ? '“To” must be after “From”' : '');
   const paint = () => {
     const box = $('#pvPages'); if (!box) return;
@@ -2145,6 +2162,7 @@ function showPrint() {
     }
     if (e.type === 'change' && t.dataset.p) {
       const f = t.dataset.p; o[f] = t.type === 'checkbox' ? t.checked : t.value;
+      if (f === 'hsize') { o.hsize = ptSize(t.value, 8, 28, 12); t.value = o.hsize; } if (f === 'nsize') { o.nsize = ptSize(t.value, 6, 16, 8.5); t.value = o.nsize; }
       if (f === 'from' || f === 'to') o[f] = dt(t.value);
       if (t.type !== 'text' && !t.dataset.live) redrawSide(); later(); return;
     }

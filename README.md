@@ -56,7 +56,8 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
   - Chart: logic lines, baseline, progress and float bars, non-work day shading, data date line, legend and title block, and the label beside each bar
   - Columns for printing, separate from the screen (or the same as the screen by default), and an optional timescale range
   - Title, company / prepared by, and a revision note such as "Rev 2 — overtime option" printed in the page header
-  - A **footer note** printed in bold in the middle of the footer on every page (e.g. work-hour assumptions or exclusions)
+  - A **footer note** printed in the middle of the footer on every page (e.g. work-hour assumptions or exclusions)
+  - Font family (Helvetica, Times or Courier), weight (regular or bold) and size for the page header and for the footer note; the header and footer grow to fit larger text
   - Saves a vector PDF (sharp at any size) or sends it to the printer. Settings are remembered with the project
 - CSV export for Excel, protected against spreadsheet formula injection
 - Project files are saved as `.json`, and work also autosaves in the browser
