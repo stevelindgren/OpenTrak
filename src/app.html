@@ -171,6 +171,7 @@ table.grid{border-collapse:separate;border-spacing:0;table-layout:fixed}
 .grid td.d{font-variant-numeric:tabular-nums;color:var(--text);padding:0 7px}
 .grid td.c-code{color:var(--muted);font-variant-numeric:tabular-nums}
 .grid tr.act:hover td{background:var(--hover)}
+.grid tr.fill td{cursor:default}
 .grid tr.sel td{background:var(--sel)!important}
 .grid tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--sel-line)}
 .grid tr.crit td.c-name{color:var(--crit-ink)}
@@ -864,6 +865,9 @@ function cellHtml(c, a, r) {
   return '';
 }
 function relTxt(code, l) { return code + (l.type !== 'FS' || l.lag ? ' ' + l.type + (l.lag ? (l.lag > 0 ? '+' : '') + l.lag : '') : ''); }
+// rows that fit in the window below the 48px header, so the table and chart both run to the bottom like SureTrak
+let fillTo = 0;
+function rowsThatFit() { const pane = $('#left').clientHeight || $('#right').clientHeight || 0; return Math.max(0, Math.floor((pane - 48) / P.layout.rowH)); }
 function renderTable() {
   const cs = cols();
   const root = document.documentElement; root.style.setProperty('--row', P.layout.rowH + 'px'); root.style.setProperty('--fs', P.layout.fontSize + 'px');
@@ -893,6 +897,8 @@ function renderTable() {
         return '<td class="c-' + c.k + (c.n ? ' n' : '') + (c.d ? ' d' : '') + (editable ? ' ed' : '') + '" data-k="' + c.k + '">' + cellHtml(c, a, r) + '</td>';
       }).join('') + '</tr>';
   }
+  const blank = '<tr class="fill" aria-hidden="true">' + '<td></td>'.repeat(cs.length) + '</tr>';
+  h += blank.repeat(Math.max(0, fillTo - Math.max(rows.length, 1)));
   $('#grid').innerHTML = h + '</tbody>'; $('#grid').style.width = cs.reduce((s, c) => s + c.w, 0) + 'px';
 }
 
@@ -910,7 +916,7 @@ function renderGantt() {
   if (ui.zoom !== 'day') lo -= CPM.weekday(lo) - 1; // align to Monday
   if (ui.zoom === 'month') { const d = new Date(lo * 864e5); lo = Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) / 864e5); }
   const W = Math.max(400, Math.ceil((hi - lo) * px));
-  const H = HH + Math.max(rows.length, 1) * RH;
+  const H = HH + Math.max(rows.length, 1, fillTo) * RH;
   const X = (p) => (p - lo) * px;
   gx = { lo, px, RH, HH };
   const defCal = CPM.makeCal(calById(P.defaultCal));
@@ -1358,7 +1364,7 @@ function render() {
   $$('#fseg button').forEach((b) => b.classList.toggle('on', b.dataset.f === ui.filter));
   $$('#zseg button').forEach((b) => b.classList.toggle('on', b.dataset.z === ui.zoom));
   $('#oLinks').checked = P.layout.links; $('#oFloat').checked = P.layout.bars.float.show; $('#oBL').checked = P.layout.bars.target.show;
-  renderTable(); renderGantt(); renderDetail(); spellBadge();
+  fillTo = rowsThatFit(); renderTable(); renderGantt(); renderDetail(); spellBadge();
   document.title = P.name + ' — OpenTrak';
 }
 function markSel() { $$('#grid tr.act').forEach((tr) => tr.classList.toggle('sel', tr.dataset.id === ui.sel)); }
@@ -2684,6 +2690,7 @@ $('.rail').addEventListener('click', (e) => { const b = e.target.closest('.rb');
 let boot = null;
 try { const s = localStorage.getItem(STORE); if (s) boot = sanitize(JSON.parse(s)); } catch (e) { boot = null; }
 if (mobile()) ui.view = 'table';
+if (window.ResizeObserver) new ResizeObserver(() => { if (rowsThatFit() !== fillTo) render(); }).observe($('#main'));
 let wasM = mobile(); window.addEventListener('resize', () => { if (mobile() !== wasM) { wasM = mobile(); if (wasM && ui.view === 'both') ui.view = 'table'; render(); } });
 load(boot || sample());
 if (!mobile()) $('#left').style.width = Math.min(cols().reduce((s, c) => s + c.w, 0) + 2, Math.round(window.innerWidth * 0.55)) + 'px';
