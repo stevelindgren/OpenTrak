@@ -45,7 +45,8 @@ The visual rules live in the OpenTrak design system (https://claude.ai/artifact/
 
 - Use tokens, never raw hex, in new UI. Chrome stays graphite; color only for meaning (critical, warning, success) and cobalt only for focus, selection, the primary action and the data date.
 - One filled primary button per view. Everything else is an outlined or ghost button, a menu item or a link.
-- Status is text in the status line, not pills. Secondary options go in a menu (`.menu-wrap` + `menuToggle`), one level deep.
+- **Top layout is the owner's choice — keep it:** a header with the project name, status pills (data date, Update progress, finish, baseline variance) and the action buttons (Undo, Redo, Check, Print / PDF, Milestone, + Activity); and one toolbar row with every view option visible (search, All/Critical/Incomplete/Issues, Table/Split/Gantt, Day/Week/Month, Logic/Float/Baseline switches, legend). Don't move these into menus or collapse them.
+- **Accessible controls:** every control edge uses `--ot-border-strong` (3:1 against its ground in both themes). A selected option is shown by a cobalt ring, tint and bold text, and exposes `aria-pressed`; never by a faint fill alone.
 - Four type sizes (16 / 13 / 12 / 11), three weights (400 / 500 / 600), tabular figures, sentence case.
 - Hairlines (`border`, `border-subtle`) separate regions; shadows only on menus and dialogs.
 - Check both themes and phone width (390px) for every change; keep axe-core WCAG 2.2 AA clean, including 24px click targets.

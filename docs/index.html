@@ -516,6 +516,32 @@ html,body{font-size:var(--ot-fs-md);font-feature-settings:"tnum" 1}
   .hdr.bar{grid-template-areas:"name acts" "meta meta" "view view"}
   .hdr.bar>.title{display:contents} .hdr.bar .pname{grid-area:name;margin:6px 0 0 -7px;min-width:0} .hdr.bar .meta{grid-area:meta;padding:6px 0 8px}
   .hdr.bar>.acts{align-self:start;padding-top:6px}}
+
+/* ===== Controls: accessible edges and selection (owner request) =====
+   Every control edge reaches 3:1 against its ground in both themes; the selected option
+   is marked by a cobalt ring, a tint and bold text (6:1+), never by a faint fill alone. */
+@media (max-width: 1399px){.w-leg{display:none!important}}
+.btn{border-color:var(--ot-border-strong)}
+.btn:hover{border-color:var(--ot-text-2)}
+.btn.violet,.btn.slate,.btn.sky,.btn.okc,.btn.warnc,.btn.badc{border-color:var(--ot-border-strong)}
+.btn.ghost{border-color:transparent}
+.hdr .btn,.tb .btn{height:30px}
+.seg{border-color:var(--ot-border-strong);padding:2px;gap:2px}
+.seg button{height:24px;font-size:var(--ot-fs-md);color:var(--ot-text-2);border-radius:var(--ot-r-sm)}
+.seg button:hover{color:var(--ot-text);background:var(--ot-hover)}
+.seg button.on,:root[data-theme="light"] .seg button.on{background:var(--ot-tint);color:var(--ot-accent-text);font-weight:var(--ot-fw-strong);box-shadow:inset 0 0 0 1px var(--ot-accent-text)}
+:root[data-theme="dark"] .seg button.on{background:rgba(126,164,243,.2)}
+.search input{border-color:var(--ot-border-strong);font-size:var(--ot-fs-md)}
+.sw{font-size:var(--ot-fs-md);color:var(--ot-text-2)}
+.sw:has(input:checked){color:var(--ot-text)}
+.sw input{width:30px;height:18px}
+.sw input::after{width:14px;height:14px} .sw input:checked::after{transform:translateX(12px)}
+.sw input:focus-visible{outline:2px solid var(--ot-accent-text);outline-offset:2px}
+.pill{border-color:var(--ot-border);font-size:var(--ot-fs-sm)}
+.pill:has(input){border-color:var(--ot-border-strong)}
+.pill input[type=date]{color:var(--ot-text)}
+.legend{font-size:var(--ot-fs-sm);color:var(--ot-text-2)}
+:root[data-theme="dark"] .legend i[style*="--done"]{filter:brightness(1.9)}
 </style>
 </head>
 <body>
@@ -537,60 +563,51 @@ html,body{font-size:var(--ot-fs-md);font-feature-settings:"tnum" 1}
     <button class="rb" id="bTheme" data-tip="Switch theme" aria-label="Switch light or dark theme"><svg class="i" viewBox="0 0 16 16" id="themeIco"></svg></button>
   </nav>
   <div class="col">
-    <header class="hdr bar">
+    <header class="hdr">
       <div class="title">
         <input id="pname" class="pname" spellcheck="true" maxlength="120" aria-label="Project name">
-        <div class="meta">
-          <label class="meta-dd" title="Data date (status date)">Data date <input type="date" id="dd" aria-label="Data date"></label>
-          <button class="link-btn" id="bProg" title="Update progress to a new data date">Update progress</button>
-          <span class="meta-sep" aria-hidden="true"></span>
-          <span>Finish <b id="sFinish">–</b></span>
-          <span id="sVarW"><span id="sVar">–</span></span>
-          <span class="meta-sep" aria-hidden="true"></span>
-          <button class="meta-chk ok" id="bCheck" title="Schedule check"><span class="chk-dot" aria-hidden="true"></span><span id="chkTxt">No issues</span><span id="chkBadge" hidden><span>0</span></span></button>
-          <span class="meta-x" hidden>Start <b id="sStart">–</b> · <b id="sCrit">0</b> critical · <b id="sCount">0</b> activities</span>
-          <span class="meta-sep" aria-hidden="true"></span>
-          <small id="subline"></small>
-        </div>
+        <small id="subline"></small>
+      </div>
+      <div class="pills">
+        <label class="pill" title="Data date (status date)">Data date <input type="date" id="dd" aria-label="Data date"></label>
+        <button class="btn sm" id="bProg" title="Update progress to a new data date">Update progress</button>
+        <span class="pill w-xl">Start <b id="sStart">–</b></span>
+        <span class="pill">Finish <b id="sFinish">–</b></span>
+        <span class="pill" id="sVarW"><span id="sVar">–</span></span>
+        <span class="pill w-lg"><span class="dot"></span><b id="sCrit">0</b> critical</span>
+        <span class="pill w-xl"><b id="sCount">0</b> activities</span>
       </div>
       <div class="sp"></div>
-      <div class="bar-view">
-        <label class="search"><svg class="i" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input id="q" placeholder="Filter activities" aria-label="Filter activities (press / to jump here)"><kbd>/</kbd></label>
-        <select id="fsel" class="sel-q" aria-label="Show which activities"><option value="all">All activities</option><option value="crit">Critical</option><option value="open">Incomplete</option><option value="issues">Issues</option></select>
-        <div class="seg" id="vseg" role="group" aria-label="View">
-          <button data-v="table">Table</button><button data-v="both" class="on hide-m">Split</button><button data-v="gantt">Gantt</button>
-        </div>
-        <div class="seg" id="zseg" role="group" aria-label="Timescale">
-          <button data-z="day">Day</button><button data-z="week" class="on">Week</button><button data-z="month">Month</button>
-        </div>
-        <div class="menu-wrap">
-          <button class="btn" id="bShow" aria-haspopup="true" aria-expanded="false" aria-controls="mShow">Show<svg class="i caret" viewBox="0 0 16 16"><path d="M4.5 6.5L8 10l3.5-3.5"/></svg></button>
-          <div class="menu" id="mShow" hidden>
-            <div class="menu-h">On the chart</div>
-            <label class="mi"><input type="checkbox" id="oLinks" checked> Logic lines</label>
-            <label class="mi"><input type="checkbox" id="oFloat"> Float bars</label>
-            <label class="mi"><input type="checkbox" id="oBL" checked> Baseline bars</label>
-            <div class="menu-sep"></div>
-            <div class="menu-h">Legend</div>
-            <div class="legend-m"><span><i style="background:var(--bar)"></i>Non-critical</span><span><i style="background:var(--crit)"></i>Critical</span><span><i style="background:var(--done)"></i>Progress</span><span><i style="background:var(--blc);height:3px"></i>Baseline</span><span><i style="background:transparent;border-top:1.5px dashed var(--dd);height:0"></i>Data date</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="vr"></div>
       <div class="acts">
         <button class="btn ghost icon" id="bUndo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg class="i" viewBox="0 0 16 16"><path d="M5.5 4L2.5 7l3 3M2.5 7H10a3.5 3.5 0 0 1 0 7H7"/></svg></button>
         <button class="btn ghost icon" id="bRedo" title="Redo (Ctrl+Y)" aria-label="Redo"><svg class="i" viewBox="0 0 16 16"><path d="M10.5 4l3 3-3 3M13.5 7H6a3.5 3.5 0 0 0 0 7h3"/></svg></button>
-        <button class="btn" id="bAi" hidden aria-expanded="false" title="Schedule assistant"><svg class="i" viewBox="0 0 16 16"><path d="M8 2l1.3 3.4L12.7 7 9.3 8.3 8 11.7 6.7 8.3 3.3 7l3.4-1.6z"/></svg><span class="hide-m lbl-lg">Assistant</span></button>
-        <button class="btn icon" id="bPrint" title="Print preview / PDF (Ctrl+P)" aria-label="Print preview / PDF"><svg class="i" viewBox="0 0 16 16"><path d="M4.5 6V2.5h7V6"/><rect x="2.5" y="6" width="11" height="5.5" rx="1.3"/><path d="M4.5 9.5h7v4h-7z"/></svg></button>
-        <div class="menu-wrap split-btn">
-          <button class="btn pri" id="bAdd" title="Add activity (Insert)"><svg class="i" viewBox="0 0 16 16" style="stroke-width:2"><path d="M8 3v10M3 8h10"/></svg>Activity</button><button class="btn pri caret-btn" id="bAddMore" aria-haspopup="true" aria-expanded="false" aria-controls="mAdd" aria-label="More ways to add"><svg class="i" viewBox="0 0 16 16"><path d="M4.5 6.5L8 10l3.5-3.5"/></svg></button>
-          <div class="menu menu-r" id="mAdd" hidden>
-            <button class="mi" id="bAddMs"><svg class="i" viewBox="0 0 16 16"><path d="M8 2.5l5.5 5.5L8 13.5 2.5 8z"/></svg>Milestone</button>
-            <button class="mi" id="bAddNew"><svg class="i" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>New project…</button>
-          </div>
-        </div>
+        <button class="btn sky" id="bAi" hidden aria-expanded="false" title="Schedule assistant"><svg class="i" viewBox="0 0 16 16"><path d="M8 2l1.3 3.4L12.7 7 9.3 8.3 8 11.7 6.7 8.3 3.3 7l3.4-1.6z"/><path d="M12.5 10.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></svg><span class="hide-m lbl-lg">Assistant</span></button>
+        <button class="btn okc" id="bCheck" title="Schedule check"><svg class="i" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M5.4 8.2l1.8 1.8 3.4-3.7"/></svg><span class="hide-m">Check</span><span id="chkBadge" class="badge"><span>0</span></span></button>
+        <button class="btn slate" id="bPrint" title="Print preview / PDF (Ctrl+P)"><svg class="i" viewBox="0 0 16 16"><path d="M4.5 6V2.5h7V6"/><rect x="2.5" y="6" width="11" height="5.5" rx="1.3"/><path d="M4.5 9.5h7v4h-7z"/></svg><span class="hide-m lbl-lg">Print / PDF</span></button>
+        <button class="btn violet" id="bAddMs" title="Add milestone"><svg class="i" viewBox="0 0 16 16"><path d="M8 2.5l5.5 5.5L8 13.5 2.5 8z"/></svg><span class="hide-m lbl-lg">Milestone</span></button>
+        <button class="btn pri" id="bAdd" title="Add activity (Insert)"><svg class="i" viewBox="0 0 16 16" style="stroke-width:2"><path d="M8 3v10M3 8h10"/></svg>Activity</button>
       </div>
     </header>
+    <div class="tb">
+      <label class="search"><svg class="i" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input id="q" placeholder="Search activities   /" aria-label="Search activities (press / to jump here)"></label>
+      <div class="seg" id="fseg" role="group" aria-label="Filter">
+        <button data-f="all" class="on" aria-pressed="true">All</button><button data-f="crit">Critical</button><button data-f="open">Incomplete</button><button data-f="issues">Issues</button>
+      </div>
+      <div class="seg" id="vseg" role="group" aria-label="View">
+        <button data-v="table">Table</button><button data-v="both" class="on hide-m">Split</button><button data-v="gantt">Gantt</button>
+      </div>
+      <div class="seg" id="zseg" role="group" aria-label="Timescale">
+        <button data-z="day">Day</button><button data-z="week" class="on">Week</button><button data-z="month">Month</button>
+      </div>
+      <div class="vr hide-m"></div>
+      <label class="sw"><input type="checkbox" id="oLinks" checked> Logic</label>
+      <label class="sw"><input type="checkbox" id="oFloat"> Float</label>
+      <label class="sw"><input type="checkbox" id="oBL" checked> Baseline</label>
+      <div class="sp"></div>
+      <div class="legend w-leg">
+        <span><i style="background:var(--bar)"></i>Non-critical</span><span><i style="background:var(--crit)"></i>Critical</span><span><i style="background:var(--done)"></i>Progress</span><span><i style="background:var(--blc);height:3px"></i>Baseline</span>
+      </div>
+    </div>
     <div class="main v-both" id="main">
       <div class="pane" id="left"><table class="grid" id="grid" aria-label="Activities"></table></div>
       <div class="split" id="split" title="Drag to resize"></div>
@@ -2191,10 +2208,10 @@ function render() {
   if (P.baseline && P.baseline.finish && S.finishP != null) {
     const cal = CPM.makeCal(calById(P.defaultCal)); const v = -cal.between(CPM.toDn(P.baseline.finish) + 1, S.finishP);
     $('#sVar').innerHTML = v < 0 ? '<b>' + -v + ' days</b> behind baseline' : v > 0 ? '<b>' + v + ' days</b> ahead of baseline' : 'On baseline';
-    $('#sVarW').className = 'meta-var ' + (v < 0 ? 'bad' : 'ok'); $('#sVarW').style.display = '';
+    $('#sVarW').className = 'pill ' + (v < 0 ? 'bad' : 'ok'); $('#sVarW').style.display = '';
   } else $('#sVarW').style.display = 'none';
   const ne = S.errors.length, nw = S.warnings.length; const bdg = $('#chkBadge');
-  bdg.firstChild.textContent = ne + nw; $('#bCheck').className = 'meta-chk ' + (ne ? 'bad' : nw ? 'warn' : 'ok'); $('#chkTxt').textContent = ne + nw ? (ne + nw) + ' to review' : 'No issues'; $('#bCheck').title = ne + nw ? (ne + nw) + ' item' + (ne + nw > 1 ? 's' : '') + ' to review' : 'Schedule check: no problems';
+  bdg.firstChild.textContent = ne + nw; $('#bCheck').className = 'btn ' + (ne ? 'badc' : nw ? 'warnc' : 'okc'); $('#bCheck').title = ne + nw ? (ne + nw) + ' item' + (ne + nw > 1 ? 's' : '') + ' to review' : 'Schedule check: no problems';
   const SB = screenBars(P.layout.bars), rs = document.documentElement.style;
   rs.setProperty('--bar', SB.remaining.color); rs.setProperty('--crit', SB.critical.color); rs.setProperty('--done', SB.progress.color); rs.setProperty('--blc', SB.target.color);
   rs.setProperty('--crit-ink', theme === 'dark' ? 'color-mix(in srgb, ' + SB.critical.color + ' 62%, #fff)' : SB.critical.color);
@@ -2203,7 +2220,8 @@ function render() {
   $('#bUndo').disabled = !undo.length; $('#bRedo').disabled = !redo.length;
   $('#main').className = 'main v-' + ui.view + (ui.sel && act(ui.sel) ? ' dopen' : '') + (ui.ai ? ' aiopen' : '');
   $$('#vseg button').forEach((b) => b.classList.toggle('on', b.dataset.v === ui.view));
-  $('#fsel').value = ui.filter;
+  $$('#fseg button').forEach((b) => b.classList.toggle('on', b.dataset.f === ui.filter));
+  $$('#fseg button,#vseg button,#zseg button').forEach((b) => b.setAttribute('aria-pressed', String(b.classList.contains('on'))));
   $$('#zseg button').forEach((b) => b.classList.toggle('on', b.dataset.z === ui.zoom));
   $('#oLinks').checked = P.layout.links; $('#oFloat').checked = P.layout.bars.float.show; $('#oBL').checked = P.layout.bars.target.show;
   renderTable(); renderGantt(); renderDetail(); spellBadge();
@@ -3573,31 +3591,13 @@ $('#dPrev').onclick = () => step(-1); $('#dNext').onclick = () => step(1);
 
 // toolbar
 $('#bAdd').onclick = () => addActivity('task');
-$('#bAddMs').onclick = () => { menuToggle($('#bAddMore'), $('#mAdd'), false); addActivity('finish'); };
+$('#bAddMs').onclick = () => addActivity('finish');
 $('#bUndo').onclick = doUndo; $('#bRedo').onclick = doRedo;
 $('#bCmd').onclick = showCmd; $('#bProg').onclick = showProgress; $('#bCheck').onclick = showCheck; $('#bBaseline').onclick = showBaseline; $('#bCal').onclick = showCalendars; $('#bProj').onclick = showProject; $('#bFile').onclick = showFile; $('#bPrint').onclick = showPrint; $('#bBars').onclick = showBars; $('#bCols').onclick = showColumns;
 $('#pname').addEventListener('change', (e) => commit(() => { P.name = str(e.target.value, 120) || 'Untitled project'; }));
 $('#dd').addEventListener('change', (e) => { const v = dt(e.target.value); if (v) commit(() => { P.dataDate = v; }); });
 $('#q').addEventListener('input', (e) => { ui.q = e.target.value; render(); });
-$('#fsel').onchange = (e) => { ui.filter = e.target.value; render(); };
-// menus: one open at a time, close on outside click or Esc, keyboard reachable
-function menuToggle(btn, menu, open) {
-  const want = open == null ? menu.hidden : open;
-  $$('.menu').forEach((m) => { if (m !== menu) { m.hidden = true; const b2 = $('[aria-controls="' + m.id + '"]'); if (b2) b2.setAttribute('aria-expanded', 'false'); } });
-  menu.hidden = !want; btn.setAttribute('aria-expanded', String(want));
-  menu.style.position = menu.style.top = menu.style.left = menu.style.right = '';
-  if (want && mobile()) { // inside a sideways-scrolling row: pin it to the screen under its button
-    const r = btn.getBoundingClientRect(), w = menu.offsetWidth;
-    Object.assign(menu.style, { position: 'fixed', top: Math.round(r.bottom + 6) + 'px', left: Math.round(Math.max(8, Math.min(r.left, innerWidth - w - 8))) + 'px', right: 'auto' });
-  }
-  if (want) { const f = menu.querySelector('input,button'); if (f) f.focus(); }
-}
-$('.bar-view').addEventListener('scroll', () => { const m = $$('.menu').find((x) => !x.hidden); if (m) menuToggle($('[aria-controls="' + m.id + '"]'), m, false); }, { passive: true });
-$('#bShow').onclick = (e) => { e.stopPropagation(); menuToggle($('#bShow'), $('#mShow')); };
-$('#bAddMore').onclick = (e) => { e.stopPropagation(); menuToggle($('#bAddMore'), $('#mAdd')); };
-$('#bAddNew').onclick = () => { menuToggle($('#bAddMore'), $('#mAdd'), false); showNewProject(); };
-document.addEventListener('click', (e) => { if (!e.target.closest('.menu-wrap')) $$('.menu').forEach((m) => { if (!m.hidden) menuToggle($('[aria-controls="' + m.id + '"]'), m, false); }); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { const m = $$('.menu').find((x) => !x.hidden); if (m) { e.stopImmediatePropagation(); const b2 = $('[aria-controls="' + m.id + '"]'); menuToggle(b2, m, false); b2.focus(); } } }, true);
+$('#fseg').onclick = (e) => { const b = e.target.closest('button'); if (b) { ui.filter = b.dataset.f; render(); } };
 $('#vseg').onclick = (e) => { const b = e.target.closest('button'); if (b) { ui.view = b.dataset.v; render(); } };
 $('#zseg').onclick = (e) => { const b = e.target.closest('button'); if (b) { ui.zoom = b.dataset.z; render(); scrollToDataDate(); } };
 $('#oLinks').onchange = (e) => commit(() => { P.layout.links = e.target.checked; });
