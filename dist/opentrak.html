@@ -1422,7 +1422,7 @@ function sanitizeLayout(o) {
   if (!cols.some((c) => c.show)) cols.find((c) => c.k === 'name').show = true;
   const p = o.print && typeof o.print === 'object' ? o.print : null;
   const ob = (v) => (v == null ? null : !!v);
-  const print = p ? { paper: str(p.paper, 12), orient: str(p.orient, 12), scope: str(p.scope, 6), density: str(p.density, 10), links: p.links == null ? true : !!p.links, footer: p.footer == null ? true : !!p.footer, company: str(p.company, 80), title: str(p.title, 120), rev: str(p.rev, 80), note: str(p.note, 300), hfont: fontKey(p.hfont, ''), hweight: weightKey(p.hweight, ''), hsize: p.hsize == null ? null : ptSize(p.hsize, 8, 28, 12), nfont: fontKey(p.nfont, ''), nweight: weightKey(p.nweight, ''), nsize: p.nsize == null ? null : ptSize(p.nsize, 6, 16, 8.5), from: dt(p.from), to: dt(p.to),
+  const print = p ? { paper: str(p.paper, 12), orient: str(p.orient, 12), scope: str(p.scope, 6), density: str(p.density, 10), links: p.links == null ? true : !!p.links, footer: p.footer == null ? true : !!p.footer, company: str(p.company, 80), title: str(p.title, 120), rev: str(p.rev, 80), note: str(p.note, 300), hfont: fontKey(p.hfont, ''), hweight: weightKey(p.hweight, ''), hsize: p.hsize == null ? null : ptSize(p.hsize, 8, 28, 12), nfont: fontKey(p.nfont, ''), nweight: weightKey(p.nweight, ''), nsize: p.nsize == null ? null : ptSize(p.nsize, 6, 28, 8.5), from: dt(p.from), to: dt(p.to),
     cols: Array.isArray(p.cols) ? [...new Set(p.cols.filter((k) => COLREG[k]))].slice(0, 30) : null, bl: ob(p.bl), float: ob(p.float), prog: ob(p.prog), groups: ob(p.groups), nonwork: ob(p.nonwork), ddline: ob(p.ddline), label: LABELS[p.label] ? p.label : null } : {};
   return { preset: PRESETS[o.preset] ? o.preset : 'custom', rowH: int(o.rowH, 20, 48, 28), fontSize: int(o.fontSize, 10, 16, 12), links: o.links == null ? true : !!o.links, bars: out, cols, print };
 }
@@ -2568,7 +2568,7 @@ function printOpts() {
   return { paper: PAPER[o.paper] ? o.paper : 'tabloid', orient: o.orient === 'portrait' ? 'portrait' : 'landscape', scope: ['all', 'view', 'crit', 'open'].includes(o.scope) ? o.scope : 'view',
     density: ['compact', 'normal', 'roomy'].includes(o.density) ? o.density : 'normal', links: o.links == null ? P.layout.links : !!o.links, footer: o.footer == null ? true : !!o.footer,
     company: str(o.company, 80), title: str(o.title, 120), rev: str(o.rev, 80), note: str(o.note, 300),
-    hfont: fontKey(o.hfont, 'helvetica'), hweight: weightKey(o.hweight, 'bold'), hsize: ptSize(o.hsize, 8, 28, 12), nfont: fontKey(o.nfont, 'helvetica'), nweight: weightKey(o.nweight, 'bold'), nsize: ptSize(o.nsize, 6, 16, 8.5), from: dt(o.from), to: dt(o.to),
+    hfont: fontKey(o.hfont, 'helvetica'), hweight: weightKey(o.hweight, 'bold'), hsize: ptSize(o.hsize, 8, 28, 12), nfont: fontKey(o.nfont, 'helvetica'), nweight: weightKey(o.nweight, 'bold'), nsize: ptSize(o.nsize, 6, 28, 8.5), from: dt(o.from), to: dt(o.to),
     cols: Array.isArray(o.cols) && o.cols.length ? o.cols.filter((k) => COLREG[k]) : null,
     bl: def(o.bl, B.target.show), float: def(o.float, B.float.show), prog: def(o.prog, B.progress.show), groups: def(o.groups, true), nonwork: def(o.nonwork, true), ddline: def(o.ddline, true),
     label: LABELS[o.label] ? o.label : B.labelR };
@@ -2635,15 +2635,15 @@ function buildPdf(o, mk) {
   const G0 = pdfGeom({ ...o, __head: 0, __foot: 0 }, 0);
   const doc = mk ? mk(G0.W, G0.H) : addPdfFonts(new jsPDF({ orientation: o.orient, unit: 'pt', format: [Math.min(G0.W, G0.H), Math.max(G0.W, G0.H)], compress: true }));
   // header and footer heights follow the chosen font sizes, so big text never runs into the chart
-  const hs = ptSize(o.hsize, 8, 28, 12), nsz = ptSize(o.nsize, 6, 16, 8.5), hf = fontKey(o.hfont, 'helvetica'), nf = fontKey(o.nfont, 'helvetica');
+  const hs = ptSize(o.hsize, 8, 28, 12), nsz = ptSize(o.nsize, 6, 28, 8.5), hf = fontKey(o.hfont, 'helvetica'), nf = fontKey(o.nfont, 'helvetica');
   const tbw = Math.round(Math.max(170, Math.min(250, (G0.W - 2 * G0.M) * 0.32))), noteW = G0.W - G0.M - tbw - (G0.M + 200) - 16;
   o.__head = Math.max(38, Math.ceil(hs + 26)); o.__foot = 0;
-  if (o.footer && o.note && o.note.trim()) { doc.setFont(nf, weightKey(o.nweight, 'bold')); doc.setFontSize(nsz); const nl = doc.splitTextToSize(o.note.trim(), noteW).length; o.__foot = Math.min(120, Math.max(52, Math.ceil(nl * nsz * 1.22 + 20))); }
+  if (o.footer && o.note && o.note.trim()) { doc.setFont(nf, weightKey(o.nweight, 'bold')); doc.setFontSize(nsz); const nl = doc.splitTextToSize(o.note.trim(), noteW).length; o.__foot = Math.min(180, Math.max(52, Math.ceil(nl * nsz * 1.22 + 20))); }
   const G = pdfGeom(o, rws.length);
   const { W, H, M, TH, rh, y0, y1, rpp } = G;
   doc.setProperties({ title: (o.title || P.name) + ' — schedule', creator: 'OpenTrak' });
   const B = JSON.parse(JSON.stringify(P.layout.bars)); B.target.show = !!o.bl; B.float.show = !!o.float; B.progress.show = !!o.prog; B.labelR = o.label;
-  const fsz = { compact: 6.3, normal: 7.2, roomy: 8.2 }[o.density]; let noteCut = false;
+  const fsz = { compact: 6.3, normal: 7.2, roomy: 8.2 }[o.density]; let noteCut = false, noteFz = 0;
   const fill = (h) => doc.setFillColor(...hexRgb(h)), stroke = (h) => doc.setDrawColor(...hexRgb(h)), ink = (h) => doc.setTextColor(...hexRgb(h));
   const fit = (s, w) => { s = String(s ?? ''); if (doc.getTextWidth(s) <= w) return s; while (s.length > 1 && doc.getTextWidth(s + '…') > w) s = s.slice(0, -1); return s + '…'; };
   // columns: current layout, scaled to at most ~46% of the page
@@ -2808,6 +2808,7 @@ function buildPdf(o, mk) {
         let fz = nsz, lines, lh, max;
         for (; ; fz -= 0.5) { doc.setFontSize(fz); lh = fz * 1.22; lines = doc.splitTextToSize(o.note.trim(), nw - 16); max = Math.max(1, Math.floor((fh - 4) / lh)); if (lines.length <= max || fz <= 6.5) break; }
         if (lines.length > max) { lines = lines.slice(0, max); lines[max - 1] = fit(lines[max - 1] + '…', nw - 16); noteCut = true; }
+        noteFz = fz;
         doc.text(lines, nx0 + nw / 2, fy + fh / 2 - ((lines.length - 1) * lh) / 2 + fz * 0.35, { align: 'center', lineHeightFactor: 1.22 });
       }
       doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.text(fit(o.company || 'OpenTrak', tbw - 14), tbx + 7, fy + 12);
@@ -2816,7 +2817,7 @@ function buildPdf(o, mk) {
       doc.text('Finish ' + fmt(S.finish) + (v != null ? '   Baseline ' + fmt(P.baseline.finish) + ' (' + (v < 0 ? v + 'd late' : v > 0 ? '+' + v + 'd early' : 'on time') + ')' : ''), tbx + 7, fy + 34);
     }
   }
-  return { doc, pages: G.pages, noteCut };
+  return { doc, pages: G.pages, noteCut, noteSmall: noteFz && noteFz < nsz ? noteFz : 0 };
 }
 
 // Print preview: options on the left, the real pages on the right (drawn by the same code as the PDF)
@@ -2827,7 +2828,7 @@ function showPrint() {
   const chk = (k, l, dis, hint) => '<label class="chk pv-chk"><input type="checkbox" data-p="' + k + '"' + (o[k] && !dis ? ' checked' : '') + (dis ? ' disabled' : '') + '> ' + l + (hint ? ' <span class="hint" style="margin:0">' + hint + '</span>' : '') + '</label>';
   const fontRow = (pfx, label) => '<div class="pv-font" role="group" aria-label="' + label + ' font"><select class="sel" data-p="' + pfx + 'font" aria-label="' + label + ' font family">' + Object.entries(PDF_FONTS).map(([k, l]) => '<option value="' + k + '"' + (o[pfx + 'font'] === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>'
     + '<select class="sel" data-p="' + pfx + 'weight" aria-label="' + label + ' font weight"><option value="normal"' + (o[pfx + 'weight'] === 'normal' ? ' selected' : '') + '>Regular</option><option value="bold"' + (o[pfx + 'weight'] === 'bold' ? ' selected' : '') + '>Bold</option></select>'
-    + '<label class="pv-size"><input class="inp" type="number" data-p="' + pfx + 'size" min="' + (pfx === 'h' ? 8 : 6) + '" max="' + (pfx === 'h' ? 28 : 16) + '" step="0.5" value="' + o[pfx + 'size'] + '" aria-label="' + label + ' font size in points"><span>pt</span></label></div>';
+    + '<label class="pv-size"><input class="inp" type="number" data-p="' + pfx + 'size" min="' + (pfx === 'h' ? 8 : 6) + '" max="28" step="0.5" value="' + o[pfx + 'size'] + '" aria-label="' + label + ' font size in points"><span>pt</span></label></div>';
   const colKeys = () => printCols(o).map((c) => c.k);
   const side = () => {
     const on = new Set(colKeys());
@@ -2875,7 +2876,8 @@ function showPrint() {
     if (n > show) { const p2 = document.createElement('p'); p2.className = 'hint'; p2.textContent = 'Showing the first ' + show + ' of ' + n + ' pages.'; box.appendChild(p2); }
     const rowsN = rowsFor(o.scope, o.groups).filter((r) => r.a).length;
     $('#pvInfo').innerHTML = esc(n + ' page' + (n > 1 ? 's' : '') + ' · ' + PAPER[o.paper][0] + ' ' + o.orient + ' · ' + rowsN + ' activit' + (rowsN === 1 ? 'y' : 'ies'))
-      + (built.noteCut ? ' · <span class="neg">footer note shortened to fit: use landscape, larger paper or a shorter note</span>' : '');
+      + (built.noteCut ? ' · <span class="neg">footer note shortened to fit: use landscape, larger paper or a shorter note</span>'
+        : built.noteSmall ? ' · footer note printed at ' + built.noteSmall + 'pt to fit (use larger paper or a shorter note for full size)' : '');
     last = built;
   };
   const later = () => { clearTimeout(timer); timer = setTimeout(() => { save(); paint(); }, 120); };
@@ -2901,9 +2903,9 @@ function showPrint() {
     }
     if (e.type === 'change' && t.dataset.p) {
       const f = t.dataset.p; o[f] = t.type === 'checkbox' ? t.checked : t.value;
-      if (f === 'hsize') { o.hsize = ptSize(t.value, 8, 28, 12); t.value = o.hsize; } if (f === 'nsize') { o.nsize = ptSize(t.value, 6, 16, 8.5); t.value = o.nsize; }
+      if (f === 'hsize') { o.hsize = ptSize(t.value, 8, 28, 12); t.value = o.hsize; } if (f === 'nsize') { o.nsize = ptSize(t.value, 6, 28, 8.5); t.value = o.nsize; }
       if (f === 'from' || f === 'to') o[f] = dt(t.value);
-      if (t.type !== 'text' && !t.dataset.live) redrawSide(); later(); return;
+      if (t.type !== 'text' && t.dataset.live == null) redrawSide(); later(); return; // data-live is an empty attribute: test for presence
     }
     if (e.type === 'click' && (t.id === 'pvSave' || t.id === 'pvPrint')) {
       if (bad()) return; save();
