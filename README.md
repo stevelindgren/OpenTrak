@@ -34,7 +34,10 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - The autosave status under the project name only says "Autosaved" when the save actually worked, and warns if the browser blocks storage
 
 **Formatting** (saved with the project)
-- Format Bars: color, thickness and position for each bar type; milestone shapes; bar labels; row height and text size
+- Format Bars: color, thickness and position for each bar type; milestone shapes; bar labels (including combined labels such as name + % complete + resource); row height and text size
+- Group (WBS) bars show the group name and % complete (weighted by duration), with a progress line through the bar; the table's group rows show the % too
+- Milestones show their date beside the label (can be turned off in Format Bars)
+- Optional "Color bars by group": each group gets its own bar color and a color strip in the table; critical work stays red
 - Presets for "SureTrak classic", "Color-blind safe" (Okabe-Ito palette) and "Modern"
 - 24 available columns: choose, reorder, and drag header edges to resize
 
