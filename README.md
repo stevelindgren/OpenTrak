@@ -19,6 +19,7 @@ OpenTrak is a single HTML file. Open `dist/opentrak.html` in any modern browser 
 - Accessibility: WCAG 2.2 AA contrast in both themes (checked with axe-core), labeled controls, keyboard focus kept in dialogs, and a color-blind-safe bar preset
 - Activity table grouped by WBS, with inline editing (click a cell, then Enter or Tab)
 - Gantt chart with critical path, progress, float, baselines and logic lines
+- Activity table and Gantt run to the bottom of the window with blank ruled rows below the last activity, as in SureTrak
 - Drag from a bar's end to another bar to link them, or drag a bar's edge to change its duration
 - Detail panel for dates, progress, constraints, predecessors and successors (with driving links marked) and notes
 - **Why these dates:** the detail panel traces the driving path back to where it starts, says how far the activity is behind the baseline, and names the activities that caused the delay (e.g. "duration grew from 45 to 50 days, +10d"). In the Claude-hosted version, **Suggest ways to recover** hands that path to the assistant
