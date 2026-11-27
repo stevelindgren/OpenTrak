@@ -33,7 +33,17 @@ Do not add a feature just because competing software has it. Every feature must 
 
 ## Visual style
 
-The owner prefers the current look (navy dark theme, colored buttons and rail icons, the two-row header and toolbar with every option visible). A redesign to a graphite design system and a single command bar was tried on 26-Nov-26 and rolled back at the owner's request. Don't restyle, recolor or rearrange the header, toolbar or rail without explicit approval.
+The owner's layout stays as it is: the two-row header and toolbar with every option visible, + Activity and Milestone at the start of the toolbar, the rail on the left. A redesign that moved controls into menus was tried on 26-Nov-26 and rolled back. Don't rearrange the header, toolbar or rail without explicit approval.
+
+Colors come from the refined palette the owner specified (dark: application #10141B, workspace #171C24, toolbar/panels #1C222C, accent #4C82ED…), defined once as `--ot-*` semantic tokens at the top of `src/app.html`, with a matching light theme. Components use the tokens, never raw hex.
+
+- Sidebar icons are one neutral gray; the tool whose window is open is shown in the accent.
+- Flat controls: no glows, gradients or shadows on buttons; quiet borders; one filled primary button (+ Activity). Filled buttons use `--ot-accent-fill` so white text passes AA.
+- Selected options: selected-row blue with a 1px accent ring and bold text, plus `aria-pressed`.
+- Activity names are never red: criticality shows in the small marker dot, red negative float/variance and the Gantt bar.
+- On screen the default "SureTrak classic" bar preset uses the softer `--ot-gantt-*` colors; printouts keep the project's Format bars colors.
+- Blank projects have no WBS groups: activities are a plain list until groups are added. New IDs start at A1000.
+- Keep WCAG AA in both themes (text 4.5:1, input edges and focus 3:1) and check phone width.
 
 ## AI
 
